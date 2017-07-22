@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #include "tinydir.h"
+#include "lz4.h"
 
 void ReplaceAll(std::string& str, const std::string& from, const std::string& to)
 {
@@ -52,14 +53,17 @@ void PrintRow(FILE* dst, const unsigned char* buf, unsigned count)
 		fprintf(dst, "0x%02X", *buf);
 }
 
-void ExportFile(const char* pName, const char* pInputFilename, const char* pOutputFilename, const char* pRelativePath)
+void ExportFile(const char* pName, const char* pInputFilename, const char* pOutputFilename, const char* pRelativePath, bool bCompress)
 {
+	printf("Converting file %s\n", pInputFilename);
+
 	FILE* pOriginFile = fopen(pInputFilename, "rb");
 
 	assert(NULL != pOriginFile);
 
-	//TODO read all pOriginFile and compress it
 	unsigned int iOriginSize;
+	unsigned int iCompressedSize = 0;
+
 	fseek(pOriginFile, 0, SEEK_END);
 	iOriginSize = (unsigned int)ftell(pOriginFile);
 	fseek(pOriginFile, 0, SEEK_SET);
@@ -72,6 +76,28 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	{
 		free(pData);
 		return;
+	}
+
+	if (bCompress)
+	{
+		int iCompressBound = LZ4_compressBound(iOriginSize);
+		if (iCompressBound > 0)
+		{
+			char* pCompressed = (char*)malloc(iCompressBound);
+			iCompressedSize = LZ4_compress_default(pData, pCompressed, iOriginSize, iCompressBound);
+			
+			if (iCompressedSize >= iOriginSize)
+			{
+				printf("Useless compression for this file\n");
+				free(pCompressed);
+				bCompress = false;
+			}
+			else
+			{
+				free(pData);
+				pData = pCompressed;
+			}
+		}
 	}
 
 	std::string sHeaderFilename = pOutputFilename + std::string(".h");
@@ -133,19 +159,36 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	fprintf(pHeaderFile, "%snamespace %s \n%s{\n", sIndent.c_str(), sName.c_str(), sIndent.c_str());
 	fprintf(pSourceFile, "%snamespace %s \n%s{\n", sIndent.c_str(), sName.c_str(), sIndent.c_str());
 
-	fprintf(pHeaderFile, "%s extern const unsigned int Size;\n", sIndentP.c_str());
-	fprintf(pHeaderFile, "%s extern const char Data[];\n", sIndentP.c_str());
+	if (bCompress)
+	{
+		fprintf(pSourceFile, "%s// Compressed with LZ4_compress_default\n", sIndentP.c_str());
+		fprintf(pHeaderFile, "%s extern const unsigned int Size;\n", sIndentP.c_str());
+		fprintf(pHeaderFile, "%s extern const unsigned int CompressedSize;\n", sIndentP.c_str());
+		fprintf(pHeaderFile, "%s extern const char CompressedData[];\n", sIndentP.c_str());
 
-	fprintf(pSourceFile, "%sconst unsigned int Size = %d;\n", sIndentP.c_str(), iOriginSize);
-	fprintf(pSourceFile, "%sconst char Data[] = {", sIndentP.c_str());
+		fprintf(pSourceFile, "%sconst unsigned int Size = %d;\n", sIndentP.c_str(), iOriginSize);
+		fprintf(pSourceFile, "%sconst unsigned int CompressedSize = %d;\n", sIndentP.c_str(), iCompressedSize);
+		fprintf(pSourceFile, "%sconst char CompressedData[] = {", sIndentP.c_str());
+	}
+	else
+	{
+		fprintf(pHeaderFile, "%s extern const unsigned int Size;\n", sIndentP.c_str());
+		fprintf(pHeaderFile, "%s extern const char Data[];\n", sIndentP.c_str());
 
-	for (int iPos = 0; iPos < iOriginSize; ++iPos)
+		fprintf(pSourceFile, "%sconst unsigned int Size = %d;\n", sIndentP.c_str(), iOriginSize);
+		fprintf(pSourceFile, "%sconst char Data[] = {", sIndentP.c_str());
+	}
+
+	unsigned int iSize = bCompress ? iCompressedSize : iOriginSize;
+	for (int iPos = 0; iPos < iSize; ++iPos)
 	{
 		if (iPos % 16 == 0)
 		{
 			fprintf(pSourceFile, "\n%s", sIndentPP.c_str());
 		}
-		fprintf(pSourceFile, "0x%02X,", (unsigned char)*(pData + iPos));
+		fprintf(pSourceFile, "0x%02X", (unsigned char)*(pData + iPos));
+		if (iPos < (iSize - 1))
+			fprintf(pSourceFile, ",");
 	}
 	
 	fprintf(pSourceFile, "\n%s};\n", sIndentP.c_str());
@@ -169,8 +212,10 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	free(pData);
 }
 
-void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const char* pOutputRelative)
+void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const char* pOutputRelative, bool bCompress)
 {
+	printf("Scanning folder %s\n", pInputFolder);
+
 	std::string sFolder = pOutputFolderBase;
 	if (NULL != pOutputRelative)
 	{
@@ -198,7 +243,7 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 					sOutRelative += "/";
 				}
 				sOutRelative += file.name;
-				ScanFolder(file.path, pOutputFolderBase, sOutRelative.c_str());
+				ScanFolder(file.path, pOutputFolderBase, sOutRelative.c_str(), bCompress);
 			}
 		}
 		else
@@ -215,7 +260,7 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 			ReplaceAll(sName, " ", "_");
 			sOutPath += sName;
 
-			ExportFile(file.name, file.path, sOutPath.c_str(), pOutputRelative);
+			ExportFile(file.name, file.path, sOutPath.c_str(), pOutputRelative, bCompress);
 		}
 
 		tinydir_next(&dir);
@@ -226,9 +271,36 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 
 void main(int argn, char** argv)
 {
-	if (argn == 3)
+	const char* pInputFolder = NULL;
+	const char* pOutputFolder = NULL;
+	bool bCompress = false;
+
+	int iArg = 1;
+	while (iArg < argn)
 	{
-		ScanFolder(argv[1], argv[2], NULL);
+		if (strcmp(argv[iArg], "-c") == 0)
+		{
+			bCompress = true;
+		}
+		else if (pInputFolder == NULL)
+		{
+			pInputFolder = argv[iArg];
+		}
+		else if (pOutputFolder == NULL)
+		{
+			pOutputFolder = argv[iArg];
+		}
+		else
+		{
+			//Ignore other arguments
+		}
+		
+		++iArg;
+	}
+
+	if (pInputFolder != NULL && pOutputFolder != NULL)
+	{
+		ScanFolder(pInputFolder, pOutputFolder, NULL, bCompress);
 	}
 	else
 	{

@@ -13,7 +13,13 @@ solution "UtilsCollection"
 
 		files {
 							"../ResourceEmbedder/**.cpp",
-							"../ResourceEmbedder/**.h"
+							"../ResourceEmbedder/**.h",
+							"../externals/lz4/lib/lz4.c",
+							"../externals/lz4/lib/lz4.h"
+		}
+
+		includedirs {
+							"../externals/lz4/lib"
 		}
 
 		platforms{}
