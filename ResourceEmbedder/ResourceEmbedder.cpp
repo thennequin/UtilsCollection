@@ -145,7 +145,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		{
 			fprintf(pSourceFile, "\n%s", sIndentPP.c_str());
 		}
-		fprintf(pSourceFile, "0x%02X,", *(pData+iPos));
+		fprintf(pSourceFile, "0x%02X,", (unsigned char)*(pData + iPos));
 	}
 	
 	fprintf(pSourceFile, "\n%s};\n", sIndentP.c_str());
