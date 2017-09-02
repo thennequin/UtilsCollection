@@ -53,4 +53,25 @@ solution "UtilsCollection"
 			targetsuffix	"_r"
 			flags			{ "Optimize" }
 
+	project "BooleanExpression"
+		uuid				"16b264fc-24cc-487b-840d-24070a7d461b"
+		kind				"ConsoleApp"
+		targetdir			"../.output/"
+
+		files {
+							"../BooleanExpression/**.cpp",
+							"../BooleanExpression/**.h"
+		}
+
+		platforms{}
+
+		configuration		"Debug"
+			targetsuffix	"_d"
+			flags			{ "Symbols" }
+			
+		configuration		"Release"
+			targetsuffix	"_r"
+			flags			{ "Optimize" }
+
 		
+
