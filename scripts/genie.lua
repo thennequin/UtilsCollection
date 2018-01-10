@@ -6,6 +6,8 @@ solution "UtilsCollection"
 	platforms				{ "x32", "x64" }
 	objdir					("../.build/".._ACTION)
 
+	defines					{ "_CRT_SECURE_NO_WARNINGS" }
+
 	project "ResourceEmbedder"
 		uuid				"fecff87e-9cc0-4134-a2b5-6ef0e73969b4"
 		kind				"ConsoleApp"
