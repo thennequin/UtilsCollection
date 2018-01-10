@@ -118,7 +118,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	}
 	std::vector<std::string> oNamespaces = split(sRelativePath, '/');
 
-	int iIndent = oNamespaces.size();
+	size_t iIndent = oNamespaces.size();
 	std::string sIndent(iIndent, '\t');
 	std::string sIndentP(iIndent + 1, '\t');
 	std::string sIndentPP(iIndent + 2, '\t');
@@ -180,7 +180,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	}
 
 	unsigned int iSize = bCompress ? iCompressedSize : iOriginSize;
-	for (int iPos = 0; iPos < iSize; ++iPos)
+	for (size_t iPos = 0; iPos < iSize; ++iPos)
 	{
 		if (iPos % 16 == 0)
 		{
@@ -197,7 +197,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	fprintf(pHeaderFile, "%s}\n", sIndent.c_str());
 	fprintf(pSourceFile, "%s}\n", sIndent.c_str());
 
-	for (int iNamespace = oNamespaces.size()-1; iNamespace >= 0; --iNamespace)
+	for (size_t iNamespace = oNamespaces.size()-1; iNamespace >= 0; --iNamespace)
 	{
 		std::string sNamespaceIndent(iNamespace, '\t');
 		fprintf(pHeaderFile, "%s}\n", sNamespaceIndent.c_str());
@@ -223,7 +223,7 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 		sFolder += pOutputRelative;
 	}
 	
-	mkdir(sFolder.c_str());
+	_mkdir(sFolder.c_str());
 	tinydir_dir dir;
 	tinydir_open(&dir, pInputFolder);
 
