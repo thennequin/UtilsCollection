@@ -74,4 +74,24 @@ solution "UtilsCollection"
 			flags			{ "Optimize" }
 
 		
-
+	project "StringUtils"
+			uuid				"618ee57a-e754-46cf-9f9b-7923e531d970"
+			kind				"ConsoleApp"
+			targetdir			"../.output/"
+	
+			files {
+								"../StringUtils/**.cpp",
+								"../StringUtils/**.h"
+			}
+	
+			platforms{}
+	
+			configuration		"Debug"
+				targetsuffix	"_d"
+				flags			{ "Symbols" }
+				
+			configuration		"Release"
+				targetsuffix	"_r"
+				flags			{ "Optimize" }
+	
+			
