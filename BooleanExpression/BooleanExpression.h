@@ -1,3 +1,6 @@
+#ifndef __UTILS_COLLECTION__BOOLEAN_EXPRESSION_H__
+#define __UTILS_COLLECTION__BOOLEAN_EXPRESSION_H__
+
 class BooleanExpression
 {
 	enum ELexerType
@@ -49,3 +52,5 @@ protected:
 	const char*								m_pLiteral;
 	const BooleanExpression*				m_pExpressions[2];
 };
+
+#endif //__UTILS_COLLECTION__BOOLEAN_EXPRESSION_H__
