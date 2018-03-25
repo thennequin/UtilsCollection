@@ -197,9 +197,9 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	fprintf(pHeaderFile, "%s}\n", sIndent.c_str());
 	fprintf(pSourceFile, "%s}\n", sIndent.c_str());
 
-	for (size_t iNamespace = oNamespaces.size()-1; iNamespace >= 0; --iNamespace)
+	for (int iNamespace = 0; iNamespace < oNamespaces.size(); ++iNamespace)
 	{
-		std::string sNamespaceIndent(iNamespace, '\t');
+		std::string sNamespaceIndent(oNamespaces.size() - iNamespace - 1, '\t');
 		fprintf(pHeaderFile, "%s}\n", sNamespaceIndent.c_str());
 		fprintf(pSourceFile, "%s}\n", sNamespaceIndent.c_str());
 	}
