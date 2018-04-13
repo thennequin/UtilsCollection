@@ -363,6 +363,38 @@ namespace JsonStthm
 		return iCount;
 	}
 
+	const char* JsonValue::ToString() const
+	{
+		if (m_eType == E_TYPE_STRING)
+			return m_pString;
+		return NULL;
+	}
+
+	bool JsonValue::ToBoolean() const
+	{
+		if (m_eType == E_TYPE_BOOLEAN)
+			return m_bBoolean;
+		return false;
+	}
+
+	long JsonValue::ToInteger() const
+	{
+		if (m_eType == E_TYPE_INTEGER)
+			return m_iInteger;
+		else if (m_eType == E_TYPE_FLOAT)
+			return (long)m_fFloat;
+		return 0;
+	}
+
+	double JsonValue::ToFloat() const
+	{
+		if (m_eType == E_TYPE_FLOAT)
+			return m_fFloat;
+		else if (m_eType == E_TYPE_INTEGER)
+			return (double)m_iInteger;
+		return 0.0;
+	}
+
 	const JsonValue& JsonValue::operator[](const char* pName) const
 	{
 		if (m_eType == E_TYPE_OBJECT)
@@ -592,34 +624,22 @@ namespace JsonStthm
 
 	JsonValue::operator const char*() const
 	{
-		if (m_eType == E_TYPE_STRING)
-			return m_pString;
-		return NULL;
+		return ToString();
 	}
 
 	JsonValue::operator bool() const
 	{
-		if (m_eType == E_TYPE_BOOLEAN)
-			return m_bBoolean;
-		return false;
+		return ToBoolean();
 	}
 
 	JsonValue::operator long() const
 	{
-		if (m_eType == E_TYPE_INTEGER)
-			return m_iInteger;
-		else if (m_eType == E_TYPE_FLOAT)
-			return (long)m_fFloat;
-		return 0;
+		return ToInteger();
 	}
 
 	JsonValue::operator double() const
 	{
-		if (m_eType == E_TYPE_FLOAT)
-			return m_fFloat;
-		else if (m_eType == E_TYPE_INTEGER)
-			return (double)m_iInteger;
-		return 0.0;
+		return ToFloat();
 	}
 
 	//Reading

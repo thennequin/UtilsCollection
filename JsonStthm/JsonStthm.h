@@ -187,7 +187,12 @@ namespace JsonStthm
 
 		int					GetMemberCount() const;
 
-		const char*		GetName() const { return m_pName; }
+		const char*			GetName() const { return m_pName; }
+
+		const char*			ToString() const;
+		bool				ToBoolean() const;
+		long				ToInteger() const;
+		double				ToFloat() const;
 
 		const JsonValue&	operator [](const char* pName) const;
 		JsonValue&			operator [](const char* pName);
