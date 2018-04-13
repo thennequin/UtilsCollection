@@ -4,7 +4,7 @@
 
 namespace JsonStthm
 {
-	JsonValue::JsonMember::JsonMember(const Char* pName, JsonValue* pValue)
+	JsonValue::JsonMember::JsonMember(const char* pName, JsonValue* pValue)
 	{
 		m_pName = NULL;
 		SetName(pName);
@@ -24,13 +24,13 @@ namespace JsonStthm
 		delete m_pValue;
 	}
 
-	void JsonValue::JsonMember::SetName(const Char* pName)
+	void JsonValue::JsonMember::SetName(const char* pName)
 	{
 		StthmSafeFree(m_pName);
 		if (pName != NULL)
 		{
-			size_t iSize = (strlen(pName) + 1) * sizeof(Char);
-			m_pName = (Char*)StthmMalloc(iSize);
+			size_t iSize = (strlen(pName) + 1) * sizeof(char);
+			m_pName = (char*)StthmMalloc(iSize);
 			memcpy(m_pName, pName, iSize);
 		}
 	}
@@ -65,7 +65,7 @@ namespace JsonStthm
 		*this = sValue;
 	}
 
-	JsonValue::JsonValue(const Char* pValue)
+	JsonValue::JsonValue(const char* pValue)
 	{
 		JsonValue();
 		*this = pValue;
@@ -146,13 +146,13 @@ namespace JsonStthm
 		m_eType = E_TYPE_INVALID;
 	}
 
-	void JsonValue::SetString(const Char* pString)
+	void JsonValue::SetString(const char* pString)
 	{
 		StthmSafeFree(m_pString);
 		if (NULL != pString)
 		{
-			size_t iLen  = sizeof(Char) * (1 + strlen(pString));
-			m_pString = (Char*)StthmMalloc(iLen);
+			size_t iLen  = sizeof(char) * (1 + strlen(pString));
+			m_pString = (char*)StthmMalloc(iLen);
 			memcpy(m_pString, pString, iLen);
 		}
 	}
@@ -253,13 +253,13 @@ namespace JsonStthm
 		}
 		else if (m_eType == E_TYPE_INTEGER)
 		{
-			Char sBuffer[256];
+			char sBuffer[256];
 			sprintf_s(sBuffer, 256, "%d", m_iInteger);
 			sOutJson += sBuffer;
 		}
 		else if (m_eType == E_TYPE_FLOAT)
 		{
-			Char sBuffer[256];
+			char sBuffer[256];
 			sprintf_s(sBuffer, 256, "%.17Lg", m_fFloat);
 			sOutJson += sBuffer;
 		}
@@ -271,10 +271,10 @@ namespace JsonStthm
 
 	void JsonValue::WriteStringEscaped(String& sOutJson, const String& sInput)
 	{
-		const Char* pString = sInput.c_str();
+		const char* pString = sInput.c_str();
 		while (*pString != '\0')
 		{
-			Char cChar = *pString;
+			char cChar = *pString;
 			if (cChar == '\n')
 				sOutJson += "\\n";
 			else if (cChar == '\r')
@@ -289,31 +289,31 @@ namespace JsonStthm
 				sOutJson += "\\\"";
 			else if (cChar == '\\')
 				sOutJson += "\\\\";
-			else if ((UChar)cChar < 0x80)
+			else if ((unsigned char)cChar < 0x80)
 				sOutJson += cChar;
 			else
 			{
 				sOutJson += "\\u";
-				unsigned int iChar = (UChar)cChar;
+				unsigned int iChar = (unsigned char)cChar;
 
 				if ((iChar & 0xF0) == 0xF0) // 4 bytes
 				{
-					iChar = ((((UChar)*(pString)) & 0x07) << 18) + ((((UChar)*(pString + 1)) & 0x3F) << 12) + ((((UChar)*(pString + 2)) & 0x3F) << 6) + ((((UChar)*(pString + 3)) & 0x3F));
+					iChar = ((((unsigned char)*(pString)) & 0x07) << 18) + ((((unsigned char)*(pString + 1)) & 0x3F) << 12) + ((((unsigned char)*(pString + 2)) & 0x3F) << 6) + ((((unsigned char)*(pString + 3)) & 0x3F));
 					pString += 3;
 				}
 				else if ((iChar & 0xF0) == 0xE0) // 3 bytes
 				{
-					iChar = ((((UChar)*(pString)) & 0x0F) << 12) + ((((UChar)*(pString + 1)) & 0x3F) << 6) + ((((UChar)*(pString + 2)) & 0x3F));
+					iChar = ((((unsigned char)*(pString)) & 0x0F) << 12) + ((((unsigned char)*(pString + 1)) & 0x3F) << 6) + ((((unsigned char)*(pString + 2)) & 0x3F));
 					pString += 2;
 				}
 				else if ((iChar & 0xF0) == 0xC0) // 2 byte
 				{
-					iChar = ((((UChar)*(pString)) & 0x1F) << 6) + ((((UChar)*(pString + 1)) & 0x3F));
+					iChar = ((((unsigned char)*(pString)) & 0x1F) << 6) + ((((unsigned char)*(pString + 1)) & 0x3F));
 					pString += 1;
 				}
 				
 
-				Char sHexa[5];
+				char sHexa[5];
 				const char* const  pHexa = "0123456789ABCDEF";
 				sHexa[0] = pHexa[(iChar >> 12) & 0x0f];
 				sHexa[1] = pHexa[(iChar >> 8) & 0x0f];
@@ -333,14 +333,14 @@ namespace JsonStthm
 		Write(sOutJson, 0, bCompact);
 	}
 
-	bool JsonValue::WriteFile(const Char* pFilename, bool bCompact)
+	bool JsonValue::WriteFile(const char* pFilename, bool bCompact)
 	{
 		FILE* pFile = fopen(pFilename, "w");
 		if (NULL != pFile)
 		{
 			String sJson;
 			WriteString(sJson, bCompact);
-			bool bRet = fwrite(sJson.c_str(), sizeof(Char), sJson.length(), pFile) == (sizeof(Char) * sJson.length());
+			bool bRet = fwrite(sJson.c_str(), sizeof(char), sJson.length(), pFile) == (sizeof(char) * sJson.length());
 			fclose(pFile);
 			return bRet;
 		}
@@ -363,7 +363,7 @@ namespace JsonStthm
 		return iCount;
 	}
 
-	const JsonValue& JsonValue::operator[](const Char* pName) const
+	const JsonValue& JsonValue::operator[](const char* pName) const
 	{
 		if (m_eType == E_TYPE_OBJECT)
 		{
@@ -380,7 +380,7 @@ namespace JsonStthm
 		return JsonValue::INVALID;
 	}
 
-	JsonValue& JsonValue::operator[](const Char* pName)
+	JsonValue& JsonValue::operator[](const char* pName)
 	{
 		if (m_eType == E_TYPE_INVALID)
 			InitType(E_TYPE_OBJECT);
@@ -518,7 +518,7 @@ namespace JsonStthm
 		return *this;
 	}
 
-	JsonValue& JsonValue::operator =(const Char* pValue)
+	JsonValue& JsonValue::operator =(const char* pValue)
 	{
 		if (!m_bConst)
 		{
@@ -624,21 +624,21 @@ namespace JsonStthm
 
 	//Reading
 
-	bool JsonValue::IsSpace(Char cChar) {
+	bool JsonValue::IsSpace(char cChar) {
 		return cChar == ' ' || (cChar >= '\t' && cChar <= '\r');
 	}
 
-	bool JsonValue::IsDigit(Char cChar)
+	bool JsonValue::IsDigit(char cChar)
 	{
 		return (cChar >= '0' && cChar <= '9');
 	}
 
-	bool JsonValue::IsXDigit(Char cChar)
+	bool JsonValue::IsXDigit(char cChar)
 	{
 		return (cChar >= '0' && cChar <= '9') || ((cChar & ~' ') >= 'A' && (cChar & ~' ') <= 'F') || ((cChar & ~' ') >= 'a' && (cChar & ~' ') <= 'f');
 	}
 
-	int	JsonValue::CharToInt(Char cChar)
+	int	JsonValue::CharToInt(char cChar)
 	{
 		if (cChar <= '9')
 			return cChar - '0';
@@ -646,12 +646,12 @@ namespace JsonStthm
 			return (cChar & ~' ') - 'A' + 10;
 	}
 
-	void JsonValue::SkipSpaces(const Char*& pString)
+	void JsonValue::SkipSpaces(const char*& pString)
 	{
 		while (IsSpace(*pString)) ++pString;
 	}
 
-	bool JsonValue::ReadSpecialChar(const Char*& pString, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadSpecialChar(const char*& pString, CharBuffer& oTempBuffer)
 	{
 		if (*pString == 'n') oTempBuffer += '\n';
 		else if (*pString == 'r') oTempBuffer += '\r';
@@ -666,31 +666,31 @@ namespace JsonStthm
 			for (int i = 0; i < 4; ++i)
 			{
 				if (IsXDigit(*++pString))
-					iChar = iChar * 16 + CharToInt((UChar)*pString);
+					iChar = iChar * 16 + CharToInt((unsigned char)*pString);
 				else
 					return false;
 			}
 			if (iChar < 0x0080)
 			{
-				oTempBuffer += (Char)iChar;
+				oTempBuffer += (char)iChar;
 			}
 			else if (iChar >= 0x80 && iChar < 0x800)
 			{
-				oTempBuffer += (Char)(0xC0 | (iChar >> 6));
-				oTempBuffer += (Char)(0x80 | (iChar & 0x3F));
+				oTempBuffer += (char)(0xC0 | (iChar >> 6));
+				oTempBuffer += (char)(0x80 | (iChar & 0x3F));
 			}
 			else if (iChar >= 0x800 && iChar < 0x7FFF)
 			{
-				oTempBuffer += (Char)(0xE0 | (iChar >> 12));
-				oTempBuffer += (Char)(0x80 | ((iChar >> 6) & 0x3F));
-				oTempBuffer += (Char)(0x80 | (iChar & 0x3F));
+				oTempBuffer += (char)(0xE0 | (iChar >> 12));
+				oTempBuffer += (char)(0x80 | ((iChar >> 6) & 0x3F));
+				oTempBuffer += (char)(0x80 | (iChar & 0x3F));
 			}
 			else if (iChar >= 0x8000 && iChar < 0x7FFFF)
 			{
-				oTempBuffer += (Char)(0xF0 | (iChar >> 18));
-				oTempBuffer += (Char)(0xE0 | ((iChar >> 12) & 0x3F));
-				oTempBuffer += (Char)(0x80 | ((iChar >> 6) & 0x3F));
-				oTempBuffer += (Char)(0x80 | (iChar & 0x3F));
+				oTempBuffer += (char)(0xF0 | (iChar >> 18));
+				oTempBuffer += (char)(0xE0 | ((iChar >> 12) & 0x3F));
+				oTempBuffer += (char)(0x80 | ((iChar >> 6) & 0x3F));
+				oTempBuffer += (char)(0x80 | (iChar & 0x3F));
 			}
 			else
 			{
@@ -704,7 +704,7 @@ namespace JsonStthm
 		return true;
 	}
 
-	bool JsonValue::ReadStringValue(const Char*& pString, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadStringValue(const char*& pString, CharBuffer& oTempBuffer)
 	{
 		oTempBuffer.Clear();
 		while (*pString != 0)
@@ -735,7 +735,7 @@ namespace JsonStthm
 		return false;
 	}
 
-	bool JsonValue::ReadStringValue(const Char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadStringValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
 	{
 		if (ReadStringValue(pString, oTempBuffer))
 		{
@@ -747,7 +747,7 @@ namespace JsonStthm
 		return false;
 	}
 
-	bool JsonValue::ReadNumericValue(const Char*& pString, JsonValue& oValue)
+	bool JsonValue::ReadNumericValue(const char*& pString, JsonValue& oValue)
 	{
 		static double const c_pExpTable[] = {
 			1e5, 1e4, 1e3, 1e2, 10, 1,
@@ -810,7 +810,7 @@ namespace JsonStthm
 		return true;
 	}
 
-	bool JsonValue::ReadObjectValue(const Char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadObjectValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
 	{
 		oValue.InitType(JsonValue::E_TYPE_OBJECT);
 		while (*pString != 0)
@@ -865,7 +865,7 @@ namespace JsonStthm
 		return false;
 	}
 
-	bool JsonValue::ReadArrayValue(const Char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadArrayValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
 	{
 		oValue.InitType(JsonValue::E_TYPE_ARRAY);
 		while (*pString != 0)
@@ -906,13 +906,13 @@ namespace JsonStthm
 		return false;
 	}
 
-	int JsonValue::ReadString(const Char* pJson)
+	int JsonValue::ReadString(const char* pJson)
 	{
 		if (pJson != NULL)
 		{
 			CharBuffer oTempBuffer;
 			Reset();
-			const Char* pEnd = pJson;
+			const char* pEnd = pJson;
 			if (!Parse(pEnd, oTempBuffer))
 			{
 				int iLine = 1;
@@ -934,7 +934,7 @@ namespace JsonStthm
 		return -1;
 	}
 
-	const bool JsonValue::Parse(const Char*& pString, CharBuffer& oTempBuffer)
+	const bool JsonValue::Parse(const char*& pString, CharBuffer& oTempBuffer)
 	{
 		bool bOk = pString != NULL && *pString != 0;
 		while (*pString != 0 && bOk)
@@ -997,7 +997,7 @@ namespace JsonStthm
 		return bOk;
 	}
 
-	int JsonValue::ReadFile(const Char* pFilename)
+	int JsonValue::ReadFile(const char* pFilename)
 	{
 		FILE* pFile = fopen(pFilename, "r");
 		if (NULL != pFile)
@@ -1008,7 +1008,7 @@ namespace JsonStthm
 			long iSize = ftell(pFile);
 			fseek(pFile, 0, SEEK_SET);
 
-			Char* pString = new Char[iSize / sizeof(Char)];
+			char* pString = new char[iSize / sizeof(char)];
 			fread(pString, 1, iSize, pFile);
 			fclose(pFile);
 

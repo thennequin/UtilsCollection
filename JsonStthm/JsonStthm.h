@@ -7,8 +7,6 @@
 
 namespace JsonStthm
 {
-	typedef char Char;
-	typedef unsigned char UChar;
 	typedef std::string String;
 
 	class STTHM_API JsonValue
@@ -86,7 +84,7 @@ namespace JsonStthm
 
 			T* Take()
 			{
-				Char* pTemp;
+				char* pTemp;
 				if (m_bUseHeap)
 				{
 					pTemp = (T*)StthmMalloc(m_iSize * sizeof(T));
@@ -115,16 +113,16 @@ namespace JsonStthm
 			bool	m_bUseHeap;
 		};
 
-		typedef Buffer<Char> CharBuffer;
+		typedef Buffer<char> CharBuffer;
 
 		struct JsonMember
 		{
 		public:
-			JsonMember(const Char* pName = NULL, JsonValue* pValue = NULL);
+			JsonMember(const char* pName = NULL, JsonValue* pValue = NULL);
 			JsonMember(const JsonMember& oSource);
 			~JsonMember();
-			void		SetName(const Char* pName);
-			Char*	m_pName;
+			void		SetName(const char* pName);
+			char*	m_pName;
 			JsonValue*	m_pValue;
 		};
 
@@ -165,18 +163,18 @@ namespace JsonStthm
 							JsonValue(const JsonValue& oSource);
 							JsonValue(bool bValue);
 							JsonValue(const String& sValue);
-							JsonValue(const Char* pValue);
+							JsonValue(const char* pValue);
 							JsonValue(long iValue);
 							JsonValue(double fValue);
 							~JsonValue();
 
 		void				InitType(EType eType);
 
-		int					ReadString(const Char* pJson);
-		int					ReadFile(const Char* pFilename);
+		int					ReadString(const char* pJson);
+		int					ReadFile(const char* pFilename);
 
 		void				WriteString(String& sOutJson, bool bCompact = false);
-		bool				WriteFile(const Char* pFilename, bool bCompact = false);
+		bool				WriteFile(const char* pFilename, bool bCompact = false);
 
 		bool				IsNull() const { return m_eType == E_TYPE_INVALID; }
 		bool				IsObject() const { return m_eType == E_TYPE_OBJECT; }
@@ -189,17 +187,17 @@ namespace JsonStthm
 
 		int					GetMemberCount() const;
 
-		const Char*		GetName() const { return m_pName; }
+		const char*		GetName() const { return m_pName; }
 
-		const JsonValue&	operator [](const Char* pName) const;
-		JsonValue&			operator [](const Char* pName);
+		const JsonValue&	operator [](const char* pName) const;
+		JsonValue&			operator [](const char* pName);
 
 		const JsonValue&	operator [](int iIndex) const;
 		JsonValue&			operator [](int iIndex);
 		
 		JsonValue&			operator =(const JsonValue& oValue);
 		JsonValue&			operator =(const String& sValue);
-		JsonValue&			operator =(const Char* pValue);
+		JsonValue&			operator =(const char* pValue);
 		JsonValue&			operator =(bool bValue);
 		JsonValue&			operator =(long iValue);
 		JsonValue&			operator =(double fValue);
@@ -213,14 +211,14 @@ namespace JsonStthm
 	protected:
 		static JsonValue	CreateConst();
 		void				Reset();
-		void				SetString(const Char* pString);
+		void				SetString(const char* pString);
 		
 		void				Write(String& sOutJson, int iIndent, bool bCompact);
 		static void			WriteStringEscaped(String& sOutJson, const String& sInput);
 
 		bool				m_bConst;
 		EType				m_eType;
-		Char*			m_pName;
+		char*			m_pName;
 		JsonValue*			m_pNext;
 
 		struct JsonChilds
@@ -231,25 +229,25 @@ namespace JsonStthm
 		union
 		{
 			JsonChilds		m_oChilds;
-			Char*			m_pString;
+			char*			m_pString;
 			bool			m_bBoolean;
 			long			m_iInteger;
 			double			m_fFloat;
 		};
 
-		const bool Parse(const Char*& pString, CharBuffer& oTempBuffer);
+		const bool Parse(const char*& pString, CharBuffer& oTempBuffer);
 
-		static inline bool	IsSpace(Char cChar);
-		static inline bool	IsDigit(Char cChar);
-		static inline bool	IsXDigit(Char cChar);
-		static inline int	CharToInt(Char cChar);
-		static inline void	SkipSpaces(const Char*& pString);
-		static inline bool	ReadSpecialChar(const Char*& pString, CharBuffer& oTempBuffer);
-		static inline bool	ReadStringValue(const Char*& pString, CharBuffer& oTempBuffer);
-		static inline bool	ReadStringValue(const Char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer);
-		static inline bool	ReadNumericValue(const Char*& pString, JsonValue& oValue);
-		static inline bool	ReadObjectValue(const Char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer);
-		static inline bool	ReadArrayValue(const Char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer);
+		static inline bool	IsSpace(char cChar);
+		static inline bool	IsDigit(char cChar);
+		static inline bool	IsXDigit(char cChar);
+		static inline int	CharToInt(char cChar);
+		static inline void	SkipSpaces(const char*& pString);
+		static inline bool	ReadSpecialChar(const char*& pString, CharBuffer& oTempBuffer);
+		static inline bool	ReadStringValue(const char*& pString, CharBuffer& oTempBuffer);
+		static inline bool	ReadStringValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer);
+		static inline bool	ReadNumericValue(const char*& pString, JsonValue& oValue);
+		static inline bool	ReadObjectValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer);
+		static inline bool	ReadArrayValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer);
 	};
 }
 
