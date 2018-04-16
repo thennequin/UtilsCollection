@@ -8,4 +8,4 @@ Collection of utils code
 
 ### Libraries
   - **BooleanExpression** : Simple Lexer does to make a search engine
-  - **JsonStthm** : Simple Json parser/serialiser (in another repository https://github.com/thennequin/JsonStthm)
+  - **JsonStthm** : Simple Json parser/serializer
