@@ -85,3 +85,19 @@ char* pString = oStrBuilder.Export();
 printf("%s", pString);
 free(pString);
 ```
+
+Result output:
+> int: -123456
+> 
+> unsigned int: 123456
+> 
+> long: -1912276171
+> 
+> unsigned long: 1912276171
+> 
+> float: 3.141593
+>
+> double: 3.141593
+
+**float** and **double** seams the same because the extension use printf with %f for both.
+
