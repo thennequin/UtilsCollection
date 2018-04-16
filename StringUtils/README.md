@@ -47,3 +47,41 @@ char* pString = oStrBuilder.Export();
 printf("%s", pString);
 myfree(pString);
 ```
+
+### Build string with numeric values
+
+
+``` c++
+#include "StringBuilder.h"
+#include "StringBuilderExtension.h"
+
+StringBuilder oStrBuilder;
+
+oStrBuilder += "int: ";
+oStrBuilder += (int)-123456;
+oStrBuilder += '\n';
+
+oStrBuilder += "unsigned int: ";
+oStrBuilder += (unsigned int)123456;
+oStrBuilder += '\n';
+
+oStrBuilder += "long: ";
+oStrBuilder += (long)-1234567890123;
+oStrBuilder += '\n';
+
+oStrBuilder += "unsigned long: ";
+oStrBuilder += (unsigned long)1234567890123;
+oStrBuilder += '\n';
+
+oStrBuilder += "float: ";
+oStrBuilder += 3.1415926535897932384626433832795028841971f;
+oStrBuilder += '\n';
+
+oStrBuilder += "double: ";
+oStrBuilder += 3.1415926535897932384626433832795028841971;
+oStrBuilder += '\n';
+
+char* pString = oStrBuilder.Export();
+printf("%s", pString);
+free(pString);
+```
