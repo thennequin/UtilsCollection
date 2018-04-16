@@ -9,3 +9,4 @@ Collection of utils code
 ### Libraries
   - **BooleanExpression** : Simple Lexer does to make a search engine
   - **JsonStthm** : Simple Json parser/serializer
+  - **StringBuilder** : Create large string easily and optimally
