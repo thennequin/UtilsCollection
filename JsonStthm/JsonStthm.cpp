@@ -833,6 +833,15 @@ namespace JsonStthm
 	bool JsonValue::ReadObjectValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
 	{
 		oValue.InitType(JsonValue::E_TYPE_OBJECT);
+
+		SkipSpaces( pString );
+
+		if( *pString == '}' )
+		{
+			++pString;
+			return true;
+		}
+
 		while (*pString != 0)
 		{
 			SkipSpaces(pString);
@@ -888,6 +897,14 @@ namespace JsonStthm
 	bool JsonValue::ReadArrayValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
 	{
 		oValue.InitType(JsonValue::E_TYPE_ARRAY);
+
+		SkipSpaces( pString );
+		if( *pString == ']' )
+		{
+			++pString;
+			return true;
+		}
+
 		while (*pString != 0)
 		{
 			SkipSpaces(pString);
