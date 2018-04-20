@@ -2,6 +2,9 @@
 #include "JsonStthm.h"
 #include <string>
 
+// Experimental long/double parser
+//#define STTHM_USE_CUSTOM_NUMERIC_PARSER
+
 namespace JsonStthm
 {
 	JsonValue::JsonMember::JsonMember(const char* pName, JsonValue* pValue)
@@ -769,6 +772,7 @@ namespace JsonStthm
 
 	bool JsonValue::ReadNumericValue(const char*& pString, JsonValue& oValue)
 	{
+	#ifdef STTHM_USE_CUSTOM_NUMERIC_PARSER
 		static double const c_pExpTable[] = {
 			1e5, 1e4, 1e3, 1e2, 10, 1,
 			0.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6,
@@ -828,6 +832,24 @@ namespace JsonStthm
 			oValue = (long)(bNeg ? -lValue : lValue);
 		}
 		return true;
+	#else //STTHM_USE_CUSTOM_NUMERIC_PARSER
+		char* pEndDouble;
+		char* pEndLong;
+		double fValue = strtod( pString, &pEndDouble );
+		long iValue = strtol( pString, &pEndLong, 10 );
+		if( pEndDouble > pEndLong )
+		{
+			pString = pEndDouble;
+			oValue = fValue;
+		}
+		else
+		{
+			pString = pEndLong;
+			oValue = iValue;
+		}
+		
+		return true;
+	#endif // !STTHM_USE_CUSTOM_NUMERIC_PARSER
 	}
 
 	bool JsonValue::ReadObjectValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
