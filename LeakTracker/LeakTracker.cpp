@@ -4,6 +4,50 @@
 #include <assert.h> //for assert
 #include <string.h> //for memset
 
+#if defined(_WIN32)
+#	include <windows.h>
+#	define mutex CRITICAL_SECTION
+
+int mutex_init(mutex *pMutex)
+{
+	InitializeCriticalSection(pMutex);
+	return 0;
+}
+
+int mutex_lock(mutex *pMutex)
+{
+	EnterCriticalSection(pMutex);
+	return 0;
+}
+
+int mutex_unlock(mutex *pMutex)
+{
+	LeaveCriticalSection(pMutex);
+	return 0;
+}
+
+#else //Linux
+#	include <pthread.h>
+#	define mutex pthread_mutex_t
+
+int mutex_init(mutex *pMutex)
+{
+	return pthread_mutex_init(pMutex, NULL);
+}
+
+int mutex_lock(mutex *pMutex)
+{
+	return pthread_mutex_lock(pMutex);
+}
+
+int mutex_unlock(mutex *pMutex)
+{
+	return pthread_mutex_unlock(pMutex);
+}
+
+#endif
+
+
 typedef struct LeakTrackerAlloc
 {
 	int								m_iCheck;
@@ -14,86 +58,120 @@ typedef struct LeakTrackerAlloc
 	int								m_iLine;
 } LeakTrackerAllocStruct;
 
-
-static const uint32_t				s_iLeakTrackerMagicValue = 0x05E4B2AD;
-static LeakTrackerAlloc*			s_pLastAlloc = NULL;
-static bool							s_bLeakTrackerSetuped = false;
-
-void LeakTrackerSetup()
+class LeakTracker
 {
-	assert(s_bLeakTrackerSetuped == false);
-	s_bLeakTrackerSetuped = true;
-}
-
-void LeakTrackerShutdown()
-{
-	assert(s_bLeakTrackerSetuped == true);
-	s_bLeakTrackerSetuped = false;
-
-	if (s_pLastAlloc != NULL)
+	static const uint32_t				c_iLeakTrackerMagicValue = 0x05E4B2AD;
+	LeakTrackerAlloc*					m_pLastAlloc;
+	mutex								m_oMutex;
+public:
+	LeakTracker()
 	{
-		LeakTrackerAllocStruct* pAlloc = s_pLastAlloc;
-
-		size_t iCount = 0;
-		size_t iTotalSize = 0;
-		while (pAlloc != NULL)
-		{
-			++iCount;
-			iTotalSize += pAlloc->m_iSize;
-			pAlloc = pAlloc->m_pPrev;
-		}
-
-		printf("==========================\nLEAK(S) FOUND\n==========================\n");
-		printf("Leak count : %zd(s)\n", iCount);
-		printf("Leaks total size: %zd byte(s)\n", iTotalSize);
-		
-		pAlloc = s_pLastAlloc;
-		while (pAlloc != NULL)
-		{
-			printf("Leak: %llu byte(s)\n%s(%d)\n", pAlloc->m_iSize, pAlloc->m_pFilename, pAlloc->m_iLine);
-			pAlloc = pAlloc->m_pPrev;
-		}
-		assert(false);
+		m_pLastAlloc = NULL;
+		mutex_init(&m_oMutex);
 	}
-}
+
+	~LeakTracker()
+	{
+		mutex_lock(&m_oMutex);
+		if (m_pLastAlloc != NULL)
+		{
+			LeakTrackerAllocStruct* pAlloc = m_pLastAlloc;
+
+			size_t iCount = 0;
+			size_t iTotalSize = 0;
+			while (pAlloc != NULL)
+			{
+				++iCount;
+				iTotalSize += pAlloc->m_iSize;
+				pAlloc = pAlloc->m_pPrev;
+			}
+
+			char pReableSize[128];
+
+			printf("==========================\nLEAK(S) FOUND\n==========================\n");
+			printf("Leak count : %zd (%s)\n\n", iCount, ReadableSize(iTotalSize, pReableSize));
+
+			pAlloc = m_pLastAlloc;
+			while (pAlloc != NULL)
+			{
+				printf("Leak: %s  %s(%d)\n", ReadableSize(pAlloc->m_iSize, pReableSize), pAlloc->m_pFilename, pAlloc->m_iLine);
+				pAlloc = pAlloc->m_pPrev;
+			}
+			assert(false);
+		}
+		mutex_unlock(&m_oMutex);
+	}
+
+	void* MemAlloc(size_t iSize, const char* pFilename, int iLine)
+	{
+		mutex_lock(&m_oMutex);
+
+		LeakTrackerAllocStruct* pAllocInfos = (LeakTrackerAllocStruct*)malloc(iSize + sizeof(LeakTrackerAllocStruct));
+		pAllocInfos->m_iCheck = LeakTracker::c_iLeakTrackerMagicValue;
+		pAllocInfos->m_iSize = iSize;
+		pAllocInfos->m_pPrev = LeakTracker::m_pLastAlloc;
+		pAllocInfos->m_pNext = NULL;
+		pAllocInfos->m_pFilename = pFilename;
+		pAllocInfos->m_iLine = iLine;
+		LeakTracker::m_pLastAlloc = pAllocInfos;
+
+		mutex_unlock(&m_oMutex);
+		return (void*)(pAllocInfos + 1);
+	}
+
+	void MemFree(void* pMem, size_t iSize = 0)
+	{
+		LeakTrackerAllocStruct* pAllocInfos = ((LeakTrackerAllocStruct*)pMem) - 1;
+
+		if (pAllocInfos->m_iCheck != c_iLeakTrackerMagicValue
+			|| (iSize > 0 && pAllocInfos->m_iSize != iSize))
+		{
+			assert(false);
+			return;
+		}
+
+		mutex_lock(&m_oMutex);
+
+		if (m_pLastAlloc == pAllocInfos)
+		{
+			m_pLastAlloc = pAllocInfos->m_pPrev;
+		}
+
+		if (pAllocInfos->m_pPrev != NULL)
+		{
+			pAllocInfos->m_pPrev->m_pNext = pAllocInfos->m_pNext;
+		}
+
+		pAllocInfos->m_iCheck = 0;
+
+		free(pAllocInfos);
+
+		mutex_unlock(&m_oMutex);
+	}
+
+	static char* ReadableSize(size_t iSize, char* pBuffer)
+	{
+		int i = 0;
+		double fSize = (double)iSize;
+		const char* pUnits[] = { "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+		while (fSize > 1024.0) {
+			fSize /= 1024.0;
+			i++;
+		}
+		sprintf(pBuffer, "%.*f %s", i, fSize, pUnits[i]);
+		return pBuffer;
+	}
+};
+
+static LeakTracker s_oLeakTracker;
+
 
 void* LeakTrackerMemAlloc(size_t iSize, const char* pFilename, int iLine)
 {
-	assert(s_bLeakTrackerSetuped);
-	LeakTrackerAllocStruct* pAllocInfos = (LeakTrackerAllocStruct*)malloc(iSize + sizeof(LeakTrackerAllocStruct));
-	pAllocInfos->m_iCheck = s_iLeakTrackerMagicValue;
-	pAllocInfos->m_iSize = iSize;
-	pAllocInfos->m_pPrev = s_pLastAlloc;
-	pAllocInfos->m_pNext = NULL;
-	pAllocInfos->m_pFilename = pFilename;
-	pAllocInfos->m_iLine = iLine;
-	s_pLastAlloc = pAllocInfos;
-	return (void*)(pAllocInfos + 1);
+	return s_oLeakTracker.MemAlloc(iSize, pFilename, iLine);
 }
 
-void LeakTrackerMemFree(void* pMemory, size_t iSize)
+void LeakTrackerMemFree(void* pMem, size_t iSize)
 {
-	assert(s_bLeakTrackerSetuped);
-	LeakTrackerAllocStruct* pAllocInfos = ((LeakTrackerAllocStruct*)pMemory) - 1;
-
-	if (pAllocInfos->m_iCheck != s_iLeakTrackerMagicValue
-		|| (iSize > 0 && pAllocInfos->m_iSize != iSize) )
-	{
-		assert(false);
-		return;
-	}
-
-	if (s_pLastAlloc == pAllocInfos)
-	{
-		s_pLastAlloc = pAllocInfos->m_pPrev;
-	}
-
-	if (pAllocInfos->m_pPrev != NULL)
-	{
-		pAllocInfos->m_pPrev->m_pNext = pAllocInfos->m_pNext;
-	}
-
-	pAllocInfos->m_iCheck = 0;
-
-	free(pAllocInfos);
+	s_oLeakTracker.MemFree(pMem, iSize);
 }

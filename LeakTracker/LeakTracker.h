@@ -1,9 +1,6 @@
 #ifndef __UTILS_COLLECTION__LEAK_TRACKER_H__
 #define __UTILS_COLLECTION__LEAK_TRACKER_H__
 
-void LeakTrackerSetup();
-void LeakTrackerShutdown();
-
 void* LeakTrackerMemAlloc(size_t iSize, const char* pFilename, int iLine);
 void LeakTrackerMemFree(void* pMem, size_t iSize = 0);
 
