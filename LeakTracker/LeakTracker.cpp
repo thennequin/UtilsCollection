@@ -113,6 +113,9 @@ public:
 		pAllocInfos->m_pNext = NULL;
 		pAllocInfos->m_pFilename = pFilename;
 		pAllocInfos->m_iLine = iLine;
+
+		if (LeakTracker::m_pLastAlloc != NULL)
+			LeakTracker::m_pLastAlloc->m_pNext = pAllocInfos;
 		LeakTracker::m_pLastAlloc = pAllocInfos;
 
 		mutex_unlock(&m_oMutex);
@@ -140,6 +143,11 @@ public:
 		if (pAllocInfos->m_pPrev != NULL)
 		{
 			pAllocInfos->m_pPrev->m_pNext = pAllocInfos->m_pNext;
+		}
+
+		if (pAllocInfos->m_pNext != NULL)
+		{
+			pAllocInfos->m_pNext->m_pPrev = pAllocInfos->m_pPrev;
 		}
 
 		pAllocInfos->m_iCheck = 0;
