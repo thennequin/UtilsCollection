@@ -19,8 +19,8 @@ void operator delete(void* pMem, size_t iSize)
 	LeakTrackerMemFree(pMem, iSize);
 }
 
+#endif //__UTILS_COLLECTION__LEAK_TRACKER_H__
+
 #define malloc(size) LeakTrackerMemAlloc(size, __FILE__, __LINE__)
 #define free(ptr) LeakTrackerMemFree(ptr)
 #define new new(__FILE__, __LINE__)
-
-#endif //__UTILS_COLLECTION__LEAK_TRACKER_H__
