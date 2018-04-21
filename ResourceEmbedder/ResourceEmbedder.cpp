@@ -305,5 +305,6 @@ void main(int argn, char** argv)
 	else
 	{
 		printf("Usage: ResourceEmbedder <input resource folder> <output cpp folder>\n");
+		printf("  -c : compress files with lz4\n");
 	}
 }
