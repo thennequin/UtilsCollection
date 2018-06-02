@@ -141,22 +141,19 @@ namespace JsonStthm
 			E_TYPE_FLOAT		//double
 		};
 
-		struct JsonIterator
+		class Iterator
 		{
-			JsonValue* m_pChild;
+		public:
+			Iterator(const JsonValue* pJson);
+			Iterator(const Iterator& oIt);
 
-			void operator++() {
-				m_pChild = m_pChild->m_pNext;
-			}
-			bool operator!=(const JsonIterator &oIte) const {
-				return m_pChild != oIte.m_pChild;
-			}
-			JsonValue* operator*() const {
-				return m_pChild;
-			}
-			JsonValue* operator->() const {
-				return m_pChild;
-			}
+			bool IsValid() const;
+			bool operator!=(const Iterator& oIte) const;
+			void operator++();
+			JsonValue* operator*() const;
+			JsonValue* operator->() const;
+		protected:
+			JsonValue* m_pChild;
 		};
 
 		static JsonValue	INVALID;

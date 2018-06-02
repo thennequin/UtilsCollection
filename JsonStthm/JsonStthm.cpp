@@ -7,6 +7,55 @@
 
 namespace JsonStthm
 {
+	//////////////////////////////
+	// JsonValue::Iterator
+	//////////////////////////////
+	JsonValue::Iterator::Iterator(const JsonValue* pJson)
+	{
+		if (pJson != NULL && pJson->IsContainer())
+		{
+			m_pChild = pJson->m_oChilds.m_pFirst;
+		}
+		else
+		{
+			m_pChild = NULL;
+		}
+	}
+
+	JsonValue::Iterator::Iterator(const Iterator& oIt)
+	{
+		m_pChild = oIt.m_pChild;
+	}
+
+	bool JsonValue::Iterator::IsValid() const
+	{
+		return m_pChild != NULL;
+	}
+
+	bool JsonValue::Iterator::operator!=(const Iterator& oIte) const
+	{
+		return m_pChild != oIte.m_pChild;
+	}
+
+	void JsonValue::Iterator::operator++()
+	{
+		if (m_pChild != NULL)
+			m_pChild = m_pChild->m_pNext;
+	}
+
+	JsonValue* JsonValue::Iterator::operator*() const
+	{
+		return m_pChild;
+	}
+
+	JsonValue* JsonValue::Iterator::operator->() const
+	{
+		return m_pChild;
+	}
+
+	//////////////////////////////
+	// JsonValue::JsonMember
+	//////////////////////////////
 	JsonValue::JsonMember::JsonMember(const char* pName, JsonValue* pValue)
 	{
 		m_pName = NULL;
@@ -38,6 +87,9 @@ namespace JsonStthm
 		}
 	}
 
+	//////////////////////////////
+	// JsonValue
+	//////////////////////////////
 	JsonValue JsonValue::INVALID = JsonValue::CreateConst();
 
 	JsonValue::JsonValue()
