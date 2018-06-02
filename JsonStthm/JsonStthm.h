@@ -132,7 +132,7 @@ namespace JsonStthm
 	public:
 		enum EType
 		{
-			E_TYPE_INVALID,		//null
+			E_TYPE_INVALID = 0,	//null
 			E_TYPE_OBJECT,		//JsonMembers
 			E_TYPE_ARRAY,		//JsonArray
 			E_TYPE_STRING,		//String
