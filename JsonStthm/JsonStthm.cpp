@@ -46,7 +46,6 @@ namespace JsonStthm
 		, m_pName( NULL )
 		, m_pNext( NULL )
 	{
-		
 	}
 
 	JsonValue::JsonValue(const JsonValue& oSource)
@@ -172,10 +171,8 @@ namespace JsonStthm
 			String sIndent(iIndent, '\t');
 			String sIndent2(iIndent + 1, '\t');
 			sOutJson += "{";
-			//JsonMembers& oMembers = *m_pObject;
 			JsonValue* pChild = m_oChilds.m_pFirst;
 			bool bFirst = true;
-			//for (JsonMembers::iterator it = oMembers.begin(), itEnd = oMembers.end(); it != itEnd; ++it)
 			while (pChild != NULL)
 			{
 				if (!bFirst)
@@ -211,10 +208,8 @@ namespace JsonStthm
 			String sIndent(iIndent, '\t');
 			String sIndent2(iIndent + 1, '\t');
 			sOutJson += "[";
-			//JsonArray& oArray = *m_pArray;
 			JsonValue* pChild = m_oChilds.m_pFirst;
 			bool bFirst = true;
-			//for (JsonArray::iterator it = oArray.begin(), itEnd = oArray.end(); it != itEnd; ++it)
 			while (pChild != NULL)
 			{
 				if (!bFirst)
