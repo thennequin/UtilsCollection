@@ -185,7 +185,9 @@ namespace JsonStthm
 		bool				IsString() const { return m_eType == E_TYPE_STRING; }
 		bool				IsInteger() const { return m_eType == E_TYPE_INTEGER; }
 		bool				IsFloat() const { return m_eType == E_TYPE_FLOAT; }
+
 		bool				IsNumeric() const { return m_eType == E_TYPE_INTEGER || m_eType == E_TYPE_FLOAT; }
+		bool				IsContainer() const { return m_eType == E_TYPE_ARRAY || m_eType == E_TYPE_OBJECT; }
 
 		int					GetMemberCount() const;
 
