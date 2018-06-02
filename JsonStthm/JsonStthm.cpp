@@ -192,7 +192,8 @@ namespace JsonStthm
 				
 				sOutJson += "\"";
 				WriteStringEscaped(sOutJson, pChild->m_pName);
-				sOutJson += "\": ";
+				sOutJson += bCompact ? "\":" : "\": ";
+
 				pChild->Write(sOutJson, iIndent + 1, bCompact);
 				pChild = pChild->m_pNext;
 			}
