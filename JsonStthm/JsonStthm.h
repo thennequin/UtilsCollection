@@ -171,6 +171,7 @@ namespace JsonStthm
 							~JsonValue();
 
 		void				InitType(EType eType);
+		EType				GetType() const;
 
 		int					ReadString(const char* pJson);
 		int					ReadFile(const char* pFilename);

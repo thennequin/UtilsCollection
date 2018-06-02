@@ -122,6 +122,11 @@ namespace JsonStthm
 		}
 	}
 
+	JsonValue::EType JsonValue::GetType() const
+	{
+		return m_eType;
+	}
+
 	void JsonValue::Reset()
 	{
 		switch (m_eType)
