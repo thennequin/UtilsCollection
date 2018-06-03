@@ -54,40 +54,6 @@ namespace JsonStthm
 	}
 
 	//////////////////////////////
-	// JsonValue::JsonMember
-	//////////////////////////////
-	JsonValue::JsonMember::JsonMember(const char* pName, JsonValue* pValue)
-	{
-		m_pName = NULL;
-		SetName(pName);
-		m_pValue = pValue;
-	}
-
-	JsonValue::JsonMember::JsonMember(const JsonMember& oSource)
-	{
-		m_pName = NULL;
-		SetName(oSource.m_pName);
-		m_pValue = new JsonValue(*oSource.m_pValue);
-	}
-
-	JsonValue::JsonMember::~JsonMember()
-	{
-		StthmSafeFree(m_pName);
-		delete m_pValue;
-	}
-
-	void JsonValue::JsonMember::SetName(const char* pName)
-	{
-		StthmSafeFree(m_pName);
-		if (pName != NULL)
-		{
-			size_t iSize = (strlen(pName) + 1) * sizeof(char);
-			m_pName = (char*)StthmMalloc(iSize);
-			memcpy(m_pName, pName, iSize);
-		}
-	}
-
-	//////////////////////////////
 	// JsonValue
 	//////////////////////////////
 	JsonValue JsonValue::INVALID = JsonValue::CreateConst();

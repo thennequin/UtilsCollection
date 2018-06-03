@@ -117,17 +117,6 @@ namespace JsonStthm
 
 		typedef Buffer<char> CharBuffer;
 
-		struct JsonMember
-		{
-		public:
-			JsonMember(const char* pName = NULL, JsonValue* pValue = NULL);
-			JsonMember(const JsonMember& oSource);
-			~JsonMember();
-			void		SetName(const char* pName);
-			char*	m_pName;
-			JsonValue*	m_pValue;
-		};
-
 		struct ParseInfos;
 	public:
 		enum EType
@@ -225,7 +214,7 @@ namespace JsonStthm
 
 		bool				m_bConst;
 		EType				m_eType;
-		char*			m_pName;
+		char*				m_pName;
 		JsonValue*			m_pNext;
 
 		struct JsonChilds
