@@ -67,39 +67,39 @@ namespace JsonStthm
 	}
 
 	JsonValue::JsonValue(const JsonValue& oSource)
+		: JsonValue()
 	{
-		JsonValue();
 		m_bConst = oSource.m_bConst;
 		*this = oSource;
 	}
 
 	JsonValue::JsonValue(bool bValue)
+		: JsonValue()
 	{
-		JsonValue();
 		*this = bValue;
 	}
 
 	JsonValue::JsonValue(const String& sValue)
+		: JsonValue()
 	{
-		JsonValue();
 		*this = sValue;
 	}
 
 	JsonValue::JsonValue(const char* pValue)
+		: JsonValue()
 	{
-		JsonValue();
 		*this = pValue;
 	}
 
 	JsonValue::JsonValue(long iValue)
+		: JsonValue()
 	{
-		JsonValue();
 		*this = iValue;
 	}
 
 	JsonValue::JsonValue(double fValue)
+		: JsonValue()
 	{
-		JsonValue();
 		*this = fValue;
 	}
 
