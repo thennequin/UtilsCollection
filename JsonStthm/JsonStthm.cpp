@@ -521,11 +521,6 @@ namespace JsonStthm
 
 	JsonValue& JsonValue::operator =(const JsonValue& oValue)
 	{
-		if (oValue.m_pName != NULL)
-		{
-			m_pName = strdup(oValue.m_pName);
-		}
-
 		if (oValue.m_eType == E_TYPE_OBJECT || oValue.m_eType == E_TYPE_ARRAY)
 		{
 			InitType(oValue.m_eType);
