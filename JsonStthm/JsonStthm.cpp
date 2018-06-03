@@ -123,7 +123,7 @@ namespace JsonStthm
 			Reset();
 
 			m_eType = eType;
-			switch (m_eType)
+			switch (eType)
 			{
 			case E_TYPE_OBJECT:
 			case E_TYPE_ARRAY:
@@ -177,8 +177,9 @@ namespace JsonStthm
 		if (NULL != pString)
 		{
 			size_t iLen  = sizeof(char) * (1 + strlen(pString));
-			m_pString = (char*)StthmMalloc(iLen);
-			memcpy(m_pString, pString, iLen);
+			char* pNewString = (char*)StthmMalloc(iLen);
+			memcpy(pNewString, pString, iLen);
+			m_pString = pNewString;
 		}
 	}
 
