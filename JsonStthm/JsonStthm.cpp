@@ -467,7 +467,11 @@ namespace JsonStthm
 			if (!m_bConst)
 			{
 				JsonValue* pNewMember = new JsonValue();
-				pNewMember->m_pName = strdup(pName);
+				
+				size_t iNameLen = strlen(pName) + 1;
+				void* pNewString = malloc(iNameLen);
+				memcpy(pNewString, (const void*)pName, iNameLen);
+				pNewMember->m_pName = (char*)pNewString;
 				
 				if (NULL != m_oChilds.m_pLast)
 					m_oChilds.m_pLast->m_pNext = pNewMember;
