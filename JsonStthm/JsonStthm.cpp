@@ -164,7 +164,8 @@ namespace JsonStthm
 		}
 		break;
 		case E_TYPE_STRING:
-			StthmSafeFree(m_pString);
+			StthmFree(m_pString);
+			m_pString = NULL;
 			break;
 		default:
 			break;
@@ -174,7 +175,8 @@ namespace JsonStthm
 
 	void JsonValue::SetString(const char* pString)
 	{
-		StthmSafeFree(m_pString);
+		StthmFree(m_pString);
+		m_pString = NULL;
 		if (NULL != pString)
 		{
 			size_t iLen  = sizeof(char) * (1 + strlen(pString));
