@@ -1114,13 +1114,13 @@ namespace JsonStthm
 			long iSize = ftell(pFile);
 			fseek(pFile, 0, SEEK_SET);
 
-			char* pString = new char[iSize / sizeof(char)];
+			char* pString = (char*)malloc(iSize);
 			fread(pString, 1, iSize, pFile);
 			fclose(pFile);
 
 			int iLine = ReadString(pString);
 
-			delete[] pString;
+			free(pString);
 			return iLine;
 		}
 		return -1;
