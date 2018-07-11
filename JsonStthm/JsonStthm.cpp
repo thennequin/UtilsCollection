@@ -472,7 +472,7 @@ namespace JsonStthm
 				JsonValue* pNewMember = new JsonValue();
 				
 				size_t iNameLen = strlen(pName) + 1;
-				void* pNewString = malloc(iNameLen);
+				void* pNewString = StthmMalloc(iNameLen);
 				memcpy(pNewString, (const void*)pName, iNameLen);
 				pNewMember->m_pName = (char*)pNewString;
 				
@@ -1121,13 +1121,13 @@ namespace JsonStthm
 			long iSize = ftell(pFile);
 			fseek(pFile, 0, SEEK_SET);
 
-			char* pString = (char*)malloc(iSize);
+			char* pString = (char*)StthmMalloc(iSize);
 			fread(pString, 1, iSize, pFile);
 			fclose(pFile);
 
 			int iLine = ReadString(pString);
 
-			free(pString);
+			StthmFree(pString);
 			return iLine;
 		}
 		return -1;
