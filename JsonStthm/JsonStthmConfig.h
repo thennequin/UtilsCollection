@@ -16,7 +16,6 @@
 
 #define StthmMalloc(iSize) malloc(iSize)
 #define StthmFree(pObj) free(pObj)
-#define StthmSafeFree(pObj) {free(pObj); pObj = NULL;}
 
 // End of configuration
 

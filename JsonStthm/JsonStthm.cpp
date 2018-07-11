@@ -105,7 +105,8 @@ namespace JsonStthm
 
 	JsonValue::~JsonValue()
 	{
-		StthmSafeFree(m_pName);
+		StthmFree(m_pName);
+		m_pName = NULL;
 		Reset();
 	}
 
