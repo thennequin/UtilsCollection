@@ -283,7 +283,21 @@ namespace JsonStthm
 		else if (m_eType == E_TYPE_FLOAT)
 		{
 			char sBuffer[256];
-			sprintf_s(sBuffer, 256, "%.17Lg", m_fFloat);
+			if (isnan(m_fFloat))
+			{
+				sprintf_s( sBuffer, 256, "NaN" );
+			}
+			else if (isinf(m_fFloat))
+			{
+				if (m_fFloat < 0.f)
+					sprintf_s(sBuffer, 256, "-Infinity");
+				else
+					sprintf_s(sBuffer, 256, "Infinity");
+			}
+			else
+			{
+				sprintf_s(sBuffer, 256, "%.17Lg", m_fFloat);
+			}
 			sOutJson += sBuffer;
 		}
 		else
@@ -1021,25 +1035,43 @@ namespace JsonStthm
 					bOk = false;
 				break;
 			}
+			else if (memcmp(pString, "NaN", 3))
+			{
+				pString += 3;
+				*this = NAN;
+				break;
+			}
+			else if (memcmp(pString, "-Infinity", 9))
+			{
+				pString += 9;
+				*this = -INFINITY;
+				break;
+			}
+			else if (memcmp(pString, "Infinity", 8))
+			{
+				pString += 8;
+				*this = INFINITY;
+				break;
+			}
 			else if (IsDigit(*pString) || *pString == '-')
 			{
 				if (!ReadNumericValue(pString, *this))
 					bOk = false;
 				break;
 			}
-			else if (pString[0] == 't' && pString[1] == 'r' && pString[2] == 'u' && pString[3] == 'e')
+			else if (memcmp(pString, "true", 4))
 			{
 				pString += 4;
 				*this = true;
 				break;
 			}
-			else if (pString[0] == 'f' && pString[1] == 'a' && pString[2] == 'l' && pString[3] == 's' && pString[4] == 'e')
+			else if (memcmp(pString, "false", 5))
 			{
 				pString += 5;
 				*this = false;
 				break;
 			}
-			else if (pString[0] == 'n' && pString[1] == 'u' && pString[2] == 'l' && pString[3] == 'l')
+			else if (memcmp(pString, "null", 4))
 			{
 				pString += 4;
 				InitType(E_TYPE_INVALID);
