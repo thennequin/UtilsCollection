@@ -1045,19 +1045,19 @@ namespace JsonStthm
 					bOk = false;
 				break;
 			}
-			else if (memcmp(pString, "NaN", 3))
+			else if (memcmp(pString, "NaN", 3) == 0 )
 			{
 				pString += 3;
 				*this = NAN;
 				break;
 			}
-			else if (memcmp(pString, "-Infinity", 9))
+			else if (memcmp(pString, "-Infinity", 9) == 0 )
 			{
 				pString += 9;
 				*this = -INFINITY;
 				break;
 			}
-			else if (memcmp(pString, "Infinity", 8))
+			else if (memcmp(pString, "Infinity", 8) == 0 )
 			{
 				pString += 8;
 				*this = INFINITY;
@@ -1069,19 +1069,19 @@ namespace JsonStthm
 					bOk = false;
 				break;
 			}
-			else if (memcmp(pString, "true", 4))
+			else if (memcmp(pString, "true", 4) == 0 )
 			{
 				pString += 4;
 				*this = true;
 				break;
 			}
-			else if (memcmp(pString, "false", 5))
+			else if (memcmp(pString, "false", 5) == 0 )
 			{
 				pString += 5;
 				*this = false;
 				break;
 			}
-			else if (memcmp(pString, "null", 4))
+			else if (memcmp(pString, "null", 4) == 0 )
 			{
 				pString += 4;
 				InitType(E_TYPE_INVALID);
