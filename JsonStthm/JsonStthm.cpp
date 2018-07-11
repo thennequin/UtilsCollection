@@ -451,6 +451,9 @@ namespace JsonStthm
 
 	JsonValue& JsonValue::operator[](const char* pName)
 	{
+		if (pName == NULL || pName[0] == 0)
+			return JsonValue::INVALID;
+
 		if (m_eType == E_TYPE_INVALID)
 			InitType(E_TYPE_OBJECT);
 		if (m_eType == E_TYPE_OBJECT)
