@@ -28,7 +28,7 @@ namespace JsonStthm
 			~Buffer()
 			{
 				if (!m_bUseHeap)
-					StthmSafeFree(m_pData);
+					StthmFree(m_pData);
 			}
 
 			Buffer<T>& operator +=(const T& oValue)
