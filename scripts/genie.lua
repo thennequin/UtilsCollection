@@ -16,12 +16,24 @@ solution "UtilsCollection"
 		files {
 							"../ResourceEmbedder/**.cpp",
 							"../ResourceEmbedder/**.h",
+
 							"../externals/lz4/lib/lz4.c",
-							"../externals/lz4/lib/lz4.h"
+							"../externals/lz4/lib/lz4.h",
+							"../externals/lz4/lib/lz4hc.c",
+							"../externals/lz4/lib/lz4hc.h",
+
+							"../externals/zstd/lib/zstd.h",
+							"../externals/zstd/lib/common/**.c",
+							"../externals/zstd/lib/common/**.h",
+							"../externals/zstd/lib/compress/**.c",
+							"../externals/zstd/lib/compress/**.h"
 		}
 
 		includedirs {
-							"../externals/lz4/lib"
+							"../externals/lz4/lib",
+							"../externals/zstd/lib/",
+							"../externals/zstd/lib/common",
+							"../externals/zstd/lib/compress"
 		}
 
 		platforms{}
