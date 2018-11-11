@@ -11,7 +11,16 @@
 #include <assert.h>
 
 #include "tinydir.h"
-#include "lz4.h"
+#include "lz4hc.h"
+#include "zstd.h"
+
+enum ECompressMode
+{
+	E_COMPRESS_MODE_NONE = 0,
+	E_COMPRESS_MODE_LZ4,
+	E_COMPRESS_MODE_LZ4HC,
+	E_COMPRESS_MODE_ZSTD,
+};
 
 void ReplaceAll(std::string& str, const std::string& from, const std::string& to)
 {
@@ -53,7 +62,7 @@ void PrintRow(FILE* dst, const unsigned char* buf, unsigned count)
 		fprintf(dst, "0x%02X", *buf);
 }
 
-void ExportFile(const char* pName, const char* pInputFilename, const char* pOutputFilename, const char* pRelativePath, bool bCompress)
+void ExportFile(const char* pName, const char* pInputFilename, const char* pOutputFilename, const char* pRelativePath, ECompressMode eCompressMode)
 {
 	printf("Converting file %s\n", pInputFilename);
 
@@ -78,7 +87,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		return;
 	}
 
-	if (bCompress)
+	if (eCompressMode == E_COMPRESS_MODE_LZ4)
 	{
 		int iCompressBound = LZ4_compressBound(iOriginSize);
 		if (iCompressBound > 0)
@@ -90,7 +99,49 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 			{
 				printf("Useless compression for this file\n");
 				free(pCompressed);
-				bCompress = false;
+				eCompressMode = E_COMPRESS_MODE_NONE;
+			}
+			else
+			{
+				free(pData);
+				pData = pCompressed;
+			}
+		}
+	}
+	else if (eCompressMode == E_COMPRESS_MODE_LZ4HC)
+	{
+		int iCompressBound = LZ4_compressBound(iOriginSize);
+		if (iCompressBound > 0)
+		{
+			char* pCompressed = (char*)malloc(iCompressBound);
+			iCompressedSize = LZ4_compress_HC(pData, pCompressed, iOriginSize, iCompressBound, 5);
+
+			if (iCompressedSize >= iOriginSize)
+			{
+				printf("Useless compression for this file\n");
+				free(pCompressed);
+				eCompressMode = E_COMPRESS_MODE_NONE;
+			}
+			else
+			{
+				free(pData);
+				pData = pCompressed;
+			}
+		}
+	}
+	else if (eCompressMode == E_COMPRESS_MODE_ZSTD)
+	{
+		int iCompressBound = ZSTD_compressBound(iOriginSize);
+		if (iCompressBound > 0)
+		{
+			char* pCompressed = (char*)malloc(iCompressBound);
+			iCompressedSize = ZSTD_compress(pCompressed, iCompressBound, pData, iOriginSize, 11);
+
+			if (iCompressedSize >= iOriginSize)
+			{
+				printf("Useless compression for this file\n");
+				free(pCompressed);
+				eCompressMode = E_COMPRESS_MODE_NONE;
 			}
 			else
 			{
@@ -159,9 +210,21 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	fprintf(pHeaderFile, "%snamespace %s \n%s{\n", sIndent.c_str(), sName.c_str(), sIndent.c_str());
 	fprintf(pSourceFile, "%snamespace %s \n%s{\n", sIndent.c_str(), sName.c_str(), sIndent.c_str());
 
-	if (bCompress)
+	if (eCompressMode != E_COMPRESS_MODE_NONE)
 	{
-		fprintf(pSourceFile, "%s// Compressed with LZ4_compress_default\n", sIndentP.c_str());
+		if (eCompressMode == E_COMPRESS_MODE_LZ4)
+		{
+			fprintf(pSourceFile, "%s// Compressed with LZ4_compress_default\n", sIndentP.c_str());
+		}
+		else if (eCompressMode == E_COMPRESS_MODE_LZ4HC)
+		{
+			fprintf(pSourceFile, "%s// Compressed with LZ4_compress_HC level 5\n", sIndentP.c_str());
+		}
+		else if (eCompressMode == E_COMPRESS_MODE_ZSTD)
+		{
+			fprintf(pSourceFile, "%s// Compressed with ZSTD_compress level 11\n", sIndentP.c_str());
+		}
+
 		fprintf(pHeaderFile, "%s extern const unsigned int Size;\n", sIndentP.c_str());
 		fprintf(pHeaderFile, "%s extern const unsigned int CompressedSize;\n", sIndentP.c_str());
 		fprintf(pHeaderFile, "%s extern const char CompressedData[];\n", sIndentP.c_str());
@@ -179,7 +242,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		fprintf(pSourceFile, "%sconst char Data[] = {", sIndentP.c_str());
 	}
 
-	unsigned int iSize = bCompress ? iCompressedSize : iOriginSize;
+	unsigned int iSize = (eCompressMode != E_COMPRESS_MODE_NONE) ? iCompressedSize : iOriginSize;
 	for (size_t iPos = 0; iPos < iSize; ++iPos)
 	{
 		if (iPos % 16 == 0)
@@ -212,7 +275,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	free(pData);
 }
 
-void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const char* pOutputRelative, bool bCompress)
+void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const char* pOutputRelative, ECompressMode eCompressMode)
 {
 	printf("Scanning folder %s\n", pInputFolder);
 
@@ -222,7 +285,7 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 		sFolder += "/";
 		sFolder += pOutputRelative;
 	}
-	
+
 	_mkdir(sFolder.c_str());
 	tinydir_dir dir;
 	tinydir_open(&dir, pInputFolder);
@@ -243,7 +306,7 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 					sOutRelative += "/";
 				}
 				sOutRelative += file.name;
-				ScanFolder(file.path, pOutputFolderBase, sOutRelative.c_str(), bCompress);
+				ScanFolder(file.path, pOutputFolderBase, sOutRelative.c_str(), eCompressMode);
 			}
 		}
 		else
@@ -260,7 +323,7 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 			ReplaceAll(sName, " ", "_");
 			sOutPath += sName;
 
-			ExportFile(file.name, file.path, sOutPath.c_str(), pOutputRelative, bCompress);
+			ExportFile(file.name, file.path, sOutPath.c_str(), pOutputRelative, eCompressMode);
 		}
 
 		tinydir_next(&dir);
@@ -273,14 +336,35 @@ void main(int argn, char** argv)
 {
 	const char* pInputFolder = NULL;
 	const char* pOutputFolder = NULL;
-	bool bCompress = false;
+	ECompressMode eCompressMode = E_COMPRESS_MODE_NONE;
 
 	int iArg = 1;
 	while (iArg < argn)
 	{
 		if (strcmp(argv[iArg], "-c") == 0)
 		{
-			bCompress = true;
+			eCompressMode = E_COMPRESS_MODE_LZ4;
+		}
+		else if (strncmp(argv[iArg], "-c=", 3) == 0)
+		{
+			const char* pMode = argv[iArg] + 3;
+			if (strcmp(pMode, "lz4") == 0)
+			{
+				eCompressMode = E_COMPRESS_MODE_LZ4;
+			}
+			else if (strcmp(pMode, "lz4hc") == 0)
+			{
+				eCompressMode = E_COMPRESS_MODE_LZ4HC;
+			}
+			else if (strcmp(pMode, "zstd") == 0)
+			{
+				eCompressMode = E_COMPRESS_MODE_ZSTD;
+			}
+			else
+			{
+				printf("Invalid compress mode '%s' for argument -c=<mode>", pMode);
+				return;
+			}
 		}
 		else if (pInputFolder == NULL)
 		{
@@ -292,7 +376,8 @@ void main(int argn, char** argv)
 		}
 		else
 		{
-			//Ignore other arguments
+			printf("Invalid argument");
+			return;
 		}
 		
 		++iArg;
@@ -300,11 +385,17 @@ void main(int argn, char** argv)
 
 	if (pInputFolder != NULL && pOutputFolder != NULL)
 	{
-		ScanFolder(pInputFolder, pOutputFolder, NULL, bCompress);
+		ScanFolder(pInputFolder, pOutputFolder, NULL, eCompressMode);
 	}
 	else
 	{
 		printf("Usage: ResourceEmbedder <input resource folder> <output cpp folder>\n");
-		printf("  -c : compress files with lz4\n");
+		printf("  --c              : compress files with LZ4\n");
+		printf("  --c=<algorithm>  : compress files with specific compression algorithms\n");
+		printf("                      - lz4 : LZ4 (default)\n");
+		printf("                      - lz4hc : LZ4 High Compression (level 5)\n");
+		printf("                      - zstd : Facebook Zstd (level 11)\n");
 	}
+
+	//LeakTrackerShutdown();
 }
