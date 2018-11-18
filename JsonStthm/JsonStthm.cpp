@@ -1,6 +1,5 @@
 
 #include "JsonStthm.h"
-#include <string>
 
 // Experimental long/double parser
 //#define STTHM_USE_CUSTOM_NUMERIC_PARSER
@@ -713,7 +712,7 @@ namespace JsonStthm
 		while (IsSpace(*pString)) ++pString;
 	}
 
-	bool JsonValue::ReadSpecialChar(const char*& pString, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadSpecialChar(const char*& pString, Internal::CharBuffer& oTempBuffer)
 	{
 		if (*pString == 'n') oTempBuffer += '\n';
 		else if (*pString == 'r') oTempBuffer += '\r';
@@ -766,7 +765,7 @@ namespace JsonStthm
 		return true;
 	}
 
-	bool JsonValue::ReadStringValue(const char*& pString, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadStringValue(const char*& pString, Internal::CharBuffer& oTempBuffer)
 	{
 		oTempBuffer.Clear();
 		while (*pString != 0)
@@ -797,7 +796,7 @@ namespace JsonStthm
 		return false;
 	}
 
-	bool JsonValue::ReadStringValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadStringValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer)
 	{
 		if (ReadStringValue(pString, oTempBuffer))
 		{
@@ -891,7 +890,7 @@ namespace JsonStthm
 	#endif // !STTHM_USE_CUSTOM_NUMERIC_PARSER
 	}
 
-	bool JsonValue::ReadObjectValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadObjectValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer)
 	{
 		oValue.InitType(JsonValue::E_TYPE_OBJECT);
 
@@ -955,7 +954,7 @@ namespace JsonStthm
 		return false;
 	}
 
-	bool JsonValue::ReadArrayValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer)
+	bool JsonValue::ReadArrayValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer)
 	{
 		oValue.InitType(JsonValue::E_TYPE_ARRAY);
 
@@ -1008,7 +1007,7 @@ namespace JsonStthm
 	{
 		if (pJson != NULL)
 		{
-			CharBuffer oTempBuffer;
+			Internal::CharBuffer oTempBuffer;
 			Reset();
 			const char* pEnd = pJson;
 			if (!Parse(pEnd, oTempBuffer))
@@ -1032,7 +1031,7 @@ namespace JsonStthm
 		return -1;
 	}
 
-	const bool JsonValue::Parse(const char*& pString, CharBuffer& oTempBuffer)
+	const bool JsonValue::Parse(const char*& pString, Internal::CharBuffer& oTempBuffer)
 	{
 		bool bOk = pString != NULL && *pString != 0;
 		while (*pString != 0 && bOk)

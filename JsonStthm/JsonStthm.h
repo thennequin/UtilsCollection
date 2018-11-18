@@ -7,12 +7,8 @@
 
 namespace JsonStthm
 {
-	typedef std::string String;
-
-	class STTHM_API JsonValue
+	namespace Internal
 	{
-	protected:
-
 		template <typename T, int HeapSize = 1024>
 		struct Buffer
 		{
@@ -41,7 +37,7 @@ namespace JsonStthm
 			{
 				Resize(m_iSize + 1);
 				if (m_bUseHeap)
-					m_pHeapData[m_iSize - 1] = oValue; 
+					m_pHeapData[m_iSize - 1] = oValue;
 				else
 					m_pData[m_iSize - 1] = oValue;
 			}
@@ -67,7 +63,7 @@ namespace JsonStthm
 						m_pData = pTemp;
 						m_bUseHeap = false;
 					}
-					
+
 					m_iCapacity = iCapacity;
 				}
 			}
@@ -75,7 +71,7 @@ namespace JsonStthm
 			void Resize(int iSize)
 			{
 				int iNewCapacity = m_iCapacity > 0 ? m_iCapacity : 8;
-				while (iSize > iNewCapacity) 
+				while (iSize > iNewCapacity)
 					iNewCapacity *= 2;
 				if (iNewCapacity != m_iCapacity)
 					Reserve(iNewCapacity);
@@ -116,8 +112,12 @@ namespace JsonStthm
 		};
 
 		typedef Buffer<char> CharBuffer;
+	}
 
-		struct ParseInfos;
+	typedef std::string String;
+
+	class STTHM_API JsonValue
+	{
 	public:
 		enum EType
 		{
@@ -231,19 +231,19 @@ namespace JsonStthm
 			double			m_fFloat;
 		};
 
-		const bool Parse(const char*& pString, CharBuffer& oTempBuffer);
+		const bool Parse(const char*& pString, Internal::CharBuffer& oTempBuffer);
 
 		static inline bool	IsSpace(char cChar);
 		static inline bool	IsDigit(char cChar);
 		static inline bool	IsXDigit(char cChar);
 		static inline int	CharToInt(char cChar);
 		static inline void	SkipSpaces(const char*& pString);
-		static inline bool	ReadSpecialChar(const char*& pString, CharBuffer& oTempBuffer);
-		static inline bool	ReadStringValue(const char*& pString, CharBuffer& oTempBuffer);
-		static inline bool	ReadStringValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer);
+		static inline bool	ReadSpecialChar(const char*& pString, Internal::CharBuffer& oTempBuffer);
+		static inline bool	ReadStringValue(const char*& pString, Internal::CharBuffer& oTempBuffer);
+		static inline bool	ReadStringValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
 		static inline bool	ReadNumericValue(const char*& pString, JsonValue& oValue);
-		static inline bool	ReadObjectValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer);
-		static inline bool	ReadArrayValue(const char*& pString, JsonValue& oValue, CharBuffer& oTempBuffer);
+		static inline bool	ReadObjectValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
+		static inline bool	ReadArrayValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
 	};
 }
 
