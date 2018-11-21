@@ -858,7 +858,7 @@ namespace JsonStthm
 
 				uint64_t iExpValue = 0;
 				while (IsDigit(*pString))
-					lValue = lValue * 10 + (*pString++ & 0xF);
+					iExpValue = iExpValue * 10 + (*pString++ & 0xF);
 
 				iNegFract += bNegExp ? (int)iExpValue : -(int)iExpValue;
 			}
