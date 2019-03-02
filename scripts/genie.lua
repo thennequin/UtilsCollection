@@ -43,7 +43,6 @@ solution "UtilsCollection"
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
-			targetsuffix	"_r"
 			flags			{ "Optimize" }
 
 
@@ -64,7 +63,6 @@ solution "UtilsCollection"
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
-			targetsuffix	"_r"
 			flags			{ "Optimize" }
 
 	project "BooleanExpression"
@@ -84,7 +82,6 @@ solution "UtilsCollection"
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
-			targetsuffix	"_r"
 			flags			{ "Optimize" }
 
 		
@@ -105,7 +102,6 @@ solution "UtilsCollection"
 				flags			{ "Symbols" }
 				
 			configuration		"Release"
-				targetsuffix	"_r"
 				flags			{ "Optimize" }
 	
 			
