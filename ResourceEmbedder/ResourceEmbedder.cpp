@@ -222,12 +222,12 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		std::string sNamespace = oNamespaces[iNamespace];
 		ReplaceSpecialsChars(sNamespace);
 		std::string sNamespaceIndent(iNamespace, '\t');
-		fprintf(pHeaderFile, "%snamespace %s \n%s{\n", sNamespaceIndent.c_str(), sNamespace.c_str(), sNamespaceIndent.c_str());
-		fprintf(pSourceFile, "%snamespace %s \n%s{\n", sNamespaceIndent.c_str(), sNamespace.c_str(), sNamespaceIndent.c_str());
+		fprintf(pHeaderFile, "%snamespace %s\n%s{\n", sNamespaceIndent.c_str(), sNamespace.c_str(), sNamespaceIndent.c_str());
+		fprintf(pSourceFile, "%snamespace %s\n%s{\n", sNamespaceIndent.c_str(), sNamespace.c_str(), sNamespaceIndent.c_str());
 	}
 
-	fprintf(pHeaderFile, "%snamespace %s \n%s{\n", sIndent.c_str(), sName.c_str(), sIndent.c_str());
-	fprintf(pSourceFile, "%snamespace %s \n%s{\n", sIndent.c_str(), sName.c_str(), sIndent.c_str());
+	fprintf(pHeaderFile, "%snamespace %s\n%s{\n", sIndent.c_str(), sName.c_str(), sIndent.c_str());
+	fprintf(pSourceFile, "%snamespace %s\n%s{\n", sIndent.c_str(), sName.c_str(), sIndent.c_str());
 
 	if (eCompressMode != E_COMPRESS_MODE_NONE)
 	{
