@@ -49,6 +49,26 @@ std::vector<std::string> split(const std::string& s, char seperator)
 	return output;
 }
 
+void ReplaceSpecialsChars(std::string& sString)
+{
+	ReplaceAll(sString, ".", "_");
+	ReplaceAll(sString, " ", "_");
+	ReplaceAll(sString, "-", "_");
+	ReplaceAll(sString, "+", "_");
+	ReplaceAll(sString, "*", "_");
+	ReplaceAll(sString, "/", "_");
+	ReplaceAll(sString, "%", "_");
+	ReplaceAll(sString, "<", "_");
+	ReplaceAll(sString, ">", "_");
+	ReplaceAll(sString, "&", "_");
+	ReplaceAll(sString, "!", "_");
+	ReplaceAll(sString, "=", "_");
+	ReplaceAll(sString, "(", "_");
+	ReplaceAll(sString, ")", "_");
+	ReplaceAll(sString, "[", "_");
+	ReplaceAll(sString, "]", "_");
+}
+
 void PrintRow(FILE* dst, const unsigned char* buf, unsigned count)
 {
 	fprintf(dst, "\n    ");
@@ -94,7 +114,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		{
 			char* pCompressed = (char*)malloc(iCompressBound);
 			iCompressedSize = LZ4_compress_default(pData, pCompressed, iOriginSize, iCompressBound);
-			
+
 			if (iCompressedSize >= iOriginSize)
 			{
 				printf("Useless compression for this file\n");
@@ -173,24 +193,24 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	std::string sIndent(iIndent, '\t');
 	std::string sIndentP(iIndent + 1, '\t');
 	std::string sIndentPP(iIndent + 2, '\t');
-	
+
 
 	std::string sName = pName;
-	ReplaceAll(sName, ".", "_");
-	ReplaceAll(sName, " ", "_");
+	ReplaceSpecialsChars(sName);
 
 	std::string sDefine = "__RESOURCES_";
 	if (NULL != pRelativePath)
 	{
-		sDefine += pRelativePath;
+		std::string sRelativePath;
+		ReplaceSpecialsChars(sRelativePath);
+
+		sDefine += sRelativePath;
 		sDefine += "_";
 	}
 	sDefine += sName;
 	sDefine += "_H__";
 	std::transform(sDefine.begin(), sDefine.end(), sDefine.begin(), ::toupper);
-	ReplaceAll(sDefine, ".", "_");
-	ReplaceAll(sDefine, " ", "_");
-	ReplaceAll(sDefine, "/", "_");
+	ReplaceSpecialsChars(sDefine);
 
 	fprintf(pHeaderFile, "#ifndef %s\n", sDefine.c_str());
 	fprintf(pHeaderFile, "#define %s\n\n", sDefine.c_str());
@@ -200,8 +220,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	for (size_t iNamespace = 0; iNamespace < oNamespaces.size(); ++iNamespace)
 	{
 		std::string sNamespace = oNamespaces[iNamespace];
-		ReplaceAll(sDefine, ".", "_");
-		ReplaceAll(sDefine, " ", "_");
+		ReplaceSpecialsChars(sNamespace);
 		std::string sNamespaceIndent(iNamespace, '\t');
 		fprintf(pHeaderFile, "%snamespace %s \n%s{\n", sNamespaceIndent.c_str(), sNamespace.c_str(), sNamespaceIndent.c_str());
 		fprintf(pSourceFile, "%snamespace %s \n%s{\n", sNamespaceIndent.c_str(), sNamespace.c_str(), sNamespaceIndent.c_str());
@@ -253,7 +272,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		if (iPos < (iSize - 1))
 			fprintf(pSourceFile, ",");
 	}
-	
+
 	fprintf(pSourceFile, "\n%s};\n", sIndentP.c_str());
 
 	//Closing namespaces
@@ -319,8 +338,7 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 			}
 			sOutPath += "/";
 			std::string sName = file.name;
-			ReplaceAll(sName, ".", "_");
-			ReplaceAll(sName, " ", "_");
+			ReplaceSpecialsChars(sName);
 			sOutPath += sName;
 
 			ExportFile(file.name, file.path, sOutPath.c_str(), pOutputRelative, eCompressMode);
@@ -379,7 +397,7 @@ void main(int argn, char** argv)
 			printf("Invalid argument");
 			return;
 		}
-		
+
 		++iArg;
 	}
 
