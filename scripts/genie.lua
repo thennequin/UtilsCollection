@@ -1,4 +1,18 @@
 
+function SetupPrefix()
+	configuration 		{ "x32", "Debug" }
+		targetsuffix	"_d"
+	configuration 		{ "x32", "Release" }
+		targetsuffix	""
+	
+	configuration 		{ "x64", "Debug" }
+		targetsuffix	"_x64_d"
+	configuration 		{ "x64", "Release" }
+		targetsuffix	"_x64"
+
+	configuration()
+end
+
 solution "UtilsCollection"
 	location				(path.join("../.project/", _ACTION))
 	language				"C++"
@@ -36,21 +50,15 @@ solution "UtilsCollection"
 							"../externals/zstd/lib/compress"
 		}
 
-		platforms{}
+		configuration()
 
 		configuration		"Debug"
-			targetsuffix	"_d"
-			platforms		"x64"
-				targetsuffix	"_x64_d"
-			platforms{}
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
-			platforms		"x64"
-				targetsuffix	"_x64"
-			platforms{}
 			flags			{ "Optimize" }
 
+		SetupPrefix()
 
 	project "U8toX"
 		uuid				"83220d0c-8a77-4acb-af45-aedaad4df6b5"
@@ -62,19 +70,15 @@ solution "UtilsCollection"
 							"../u8tox/**.h"
 		}
 
-		platforms{}
+		configuration()
 
 		configuration		"Debug"
-			targetsuffix	"_d"
-			platforms		"x64"
-				targetsuffix	"_x64_d"
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
-			platforms		"x64"
-				targetsuffix	"_x64"
-			platforms{}
 			flags			{ "Optimize" }
+
+		SetupPrefix()
 
 	project "BooleanExpression"
 		uuid				"16b264fc-24cc-487b-840d-24070a7d461b"
@@ -86,20 +90,16 @@ solution "UtilsCollection"
 							"../BooleanExpression/**.h"
 		}
 
-		platforms{}
+		configuration()
 
 		configuration		"Debug"
 			targetsuffix	"_d"
-			platforms		"x64"
-				targetsuffix	"_x64_d"
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
-			platforms		"x64"
-				targetsuffix	"_x64"
-			platforms{}
 			flags			{ "Optimize" }
 
+		SetupPrefix()
 		
 	project "StringUtils"
 		uuid				"618ee57a-e754-46cf-9f9b-7923e531d970"
@@ -111,17 +111,13 @@ solution "UtilsCollection"
 							"../StringUtils/**.h"
 		}
 
-		platforms{}
+		configuration()
 
 		configuration		"Debug"
 			targetsuffix	"_d"
-			platforms		"x64"
-				targetsuffix	"_x64_d"
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
-			platforms		"x64"
-				targetsuffix	"_x64"
-			platforms{}
 			flags			{ "Optimize" }
 
+		SetupPrefix()
