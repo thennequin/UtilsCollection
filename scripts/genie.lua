@@ -40,9 +40,15 @@ solution "UtilsCollection"
 
 		configuration		"Debug"
 			targetsuffix	"_d"
+			platforms		"x64"
+				targetsuffix	"_x64_d"
+			platforms{}
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
+			platforms		"x64"
+				targetsuffix	"_x64"
+			platforms{}
 			flags			{ "Optimize" }
 
 
@@ -60,9 +66,14 @@ solution "UtilsCollection"
 
 		configuration		"Debug"
 			targetsuffix	"_d"
+			platforms		"x64"
+				targetsuffix	"_x64_d"
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
+			platforms		"x64"
+				targetsuffix	"_x64"
+			platforms{}
 			flags			{ "Optimize" }
 
 	project "BooleanExpression"
@@ -79,29 +90,38 @@ solution "UtilsCollection"
 
 		configuration		"Debug"
 			targetsuffix	"_d"
+			platforms		"x64"
+				targetsuffix	"_x64_d"
 			flags			{ "Symbols" }
 			
 		configuration		"Release"
+			platforms		"x64"
+				targetsuffix	"_x64"
+			platforms{}
 			flags			{ "Optimize" }
 
 		
 	project "StringUtils"
-			uuid				"618ee57a-e754-46cf-9f9b-7923e531d970"
-			kind				"ConsoleApp"
-			targetdir			"../.output/"
-	
-			files {
-								"../StringUtils/**.cpp",
-								"../StringUtils/**.h"
-			}
-	
-			platforms{}
-	
-			configuration		"Debug"
-				targetsuffix	"_d"
-				flags			{ "Symbols" }
-				
-			configuration		"Release"
-				flags			{ "Optimize" }
-	
+		uuid				"618ee57a-e754-46cf-9f9b-7923e531d970"
+		kind				"StaticLib"
+		targetdir			"../.output/"
+
+		files {
+							"../StringUtils/**.cpp",
+							"../StringUtils/**.h"
+		}
+
+		platforms{}
+
+		configuration		"Debug"
+			targetsuffix	"_d"
+			platforms		"x64"
+				targetsuffix	"_x64_d"
+			flags			{ "Symbols" }
 			
+		configuration		"Release"
+			platforms		"x64"
+				targetsuffix	"_x64"
+			platforms{}
+			flags			{ "Optimize" }
+
