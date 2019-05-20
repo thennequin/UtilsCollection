@@ -1,6 +1,8 @@
 
 #include "JsonStthm.h"
 
+#include <math.h>
+
 // Experimental long/double parser
 //#define STTHM_USE_CUSTOM_NUMERIC_PARSER
 
