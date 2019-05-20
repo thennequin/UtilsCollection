@@ -3,7 +3,12 @@
 #define __JSON_STTHM_H__
 
 #include "JsonStthmConfig.h"
+
 #include <string.h>
+
+#ifdef STTHM_USE_STD_STRING
+#include <string>
+#endif //STTHM_USE_STD_STRING
 
 namespace JsonStthm
 {
@@ -19,6 +24,18 @@ namespace JsonStthm
 				m_iSize = m_iCapacity = 0;
 				m_bUseHeap = true;
 				Reserve(iReserve);
+			}
+
+			Buffer(int iSize, const T& oValue)
+			{
+				m_pData = m_pHeapData;
+				m_iSize = m_iCapacity = 0;
+				m_bUseHeap = true;
+				Resize(iSize);
+				for (int i = 0; i < iSize; ++i)
+				{
+					m_pData[i] = oValue;
+				}
 			}
 
 			~Buffer()
@@ -40,6 +57,15 @@ namespace JsonStthm
 					m_pHeapData[m_iSize - 1] = oValue;
 				else
 					m_pData[m_iSize - 1] = oValue;
+			}
+
+			void PushRange(const T* pBegin, size_t iLength)
+			{
+				Resize(m_iSize + iLength);
+				if (m_bUseHeap)
+					memcpy(&m_pHeapData[m_iSize - iLength], pBegin, iLength);
+				else
+					memcpy(&m_pData[m_iSize - iLength], pBegin, iLength);
 			}
 
 			int Size() const
@@ -99,6 +125,11 @@ namespace JsonStthm
 				return pTemp;
 			}
 
+			void WriteTo(T* pOut)
+			{
+				memcpy(pOut, m_pData, m_iSize * sizeof(T));
+			}
+
 			void Clear()
 			{
 				m_iSize = 0;
@@ -113,8 +144,6 @@ namespace JsonStthm
 
 		typedef Buffer<char> CharBuffer;
 	}
-
-	typedef std::string String;
 
 	class STTHM_API JsonValue
 	{
@@ -150,7 +179,9 @@ namespace JsonStthm
 							JsonValue();
 							JsonValue(const JsonValue& oSource);
 							JsonValue(bool bValue);
-							JsonValue(const String& sValue);
+#ifdef STTHM_USE_STD_STRING
+							JsonValue(const std::string& sValue);
+#endif //STTHM_USE_STD_STRING
 							JsonValue(const char* pValue);
 							JsonValue(long iValue);
 							JsonValue(double fValue);
@@ -162,7 +193,9 @@ namespace JsonStthm
 		int					ReadString(const char* pJson);
 		int					ReadFile(const char* pFilename);
 
-		void				WriteString(String& sOutJson, bool bCompact = false);
+#ifdef STTHM_USE_STD_STRING
+		void				WriteString(std::string& sOutJson, bool bCompact = false);
+#endif //STTHM_USE_STD_STRING
 		bool				WriteFile(const char* pFilename, bool bCompact = false);
 
 		bool				IsNull() const { return m_eType == E_TYPE_INVALID; }
@@ -192,7 +225,9 @@ namespace JsonStthm
 		JsonValue&			operator [](int iIndex);
 		
 		JsonValue&			operator =(const JsonValue& oValue);
-		JsonValue&			operator =(const String& sValue);
+#ifdef STTHM_USE_STD_STRING
+		JsonValue&			operator =(const std::string& sValue);
+#endif //STTHM_USE_STD_STRING
 		JsonValue&			operator =(const char* pValue);
 		JsonValue&			operator =(bool bValue);
 		JsonValue&			operator =(long iValue);
@@ -209,8 +244,8 @@ namespace JsonStthm
 		void				Reset();
 		void				SetString(const char* pString);
 		
-		void				Write(String& sOutJson, int iIndent, bool bCompact);
-		static void			WriteStringEscaped(String& sOutJson, const String& sInput);
+		void				Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact);
+		static void			WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pBuffer);
 
 		bool				m_bConst;
 		EType				m_eType;

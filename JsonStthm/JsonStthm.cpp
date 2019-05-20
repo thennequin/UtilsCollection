@@ -1,7 +1,8 @@
 
 #include "JsonStthm.h"
 
-#include <math.h>
+#include <stdio.h> // FILE, fopen, fclose, fwrite, fread
+#include <math.h> // isnan, isinf
 
 // Experimental long/double parser
 //#define STTHM_USE_CUSTOM_NUMERIC_PARSER
@@ -80,11 +81,13 @@ namespace JsonStthm
 		*this = bValue;
 	}
 
-	JsonValue::JsonValue(const String& sValue)
+#ifdef STTHM_USE_STD_STRING
+	JsonValue::JsonValue(const std::string& sValue)
 		: JsonValue()
 	{
 		*this = sValue;
 	}
+#endif //STTHM_USE_STD_STRING
 
 	JsonValue::JsonValue(const char* pValue)
 		: JsonValue()
@@ -187,20 +190,20 @@ namespace JsonStthm
 		}
 	}
 
-	void JsonValue::Write(String& sOutJson, int iIndent, bool bCompact)
+	void JsonValue::Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact)
 	{
 		if (m_eType == E_TYPE_OBJECT)
 		{
-			String sIndent(iIndent, '\t');
-			String sIndent2(iIndent + 1, '\t');
-			sOutJson += "{";
+			Internal::CharBuffer sIndent(iIndent, '\t');
+			Internal::CharBuffer sIndent2(iIndent + 1, '\t');
+			sOutJson += '{';
 			JsonValue* pChild = m_oChilds.m_pFirst;
 			bool bFirst = true;
 			while (pChild != NULL)
 			{
 				if (!bFirst)
 				{
-					sOutJson += ",";
+					sOutJson += ',';
 				}
 				else
 				{
@@ -209,36 +212,39 @@ namespace JsonStthm
 
 				if (!bCompact)
 				{
-					sOutJson += "\n";
-					sOutJson += sIndent2;
+					sOutJson += '\n';
+					sOutJson.PushRange(sIndent2.Data(), sIndent2.Size());
 				}
 				
-				sOutJson += "\"";
+				sOutJson += '\"';
 				WriteStringEscaped(sOutJson, pChild->m_pName);
-				sOutJson += bCompact ? "\":" : "\": ";
+				sOutJson += '\"';
+				sOutJson += ':';
+				if (bCompact == false)
+					sOutJson += ' ';
 
 				pChild->Write(sOutJson, iIndent + 1, bCompact);
 				pChild = pChild->m_pNext;
 			}
 			if (!bCompact)
 			{
-				sOutJson += "\n";
-				sOutJson += sIndent;
+				sOutJson += '\n';
+				sOutJson.PushRange(sIndent.Data(), sIndent.Size());
 			}
-			sOutJson += "}";
+			sOutJson += '}';
 		}
 		else if (m_eType == E_TYPE_ARRAY)
 		{
-			String sIndent(iIndent, '\t');
-			String sIndent2(iIndent + 1, '\t');
-			sOutJson += "[";
+			Internal::CharBuffer sIndent(iIndent, '\t');
+			Internal::CharBuffer sIndent2(iIndent + 1, '\t');
+			sOutJson += '[';
 			JsonValue* pChild = m_oChilds.m_pFirst;
 			bool bFirst = true;
 			while (pChild != NULL)
 			{
 				if (!bFirst)
 				{
-					sOutJson += ",";
+					sOutJson += ',';
 				}
 				else
 				{
@@ -247,8 +253,8 @@ namespace JsonStthm
 
 				if (!bCompact)
 				{
-					sOutJson += "\n";
-					sOutJson += sIndent2;
+					sOutJson += '\n';
+					sOutJson.PushRange(sIndent2.Data(), sIndent2.Size());
 				}
 
 				pChild->Write(sOutJson, iIndent + 1, bCompact);
@@ -256,33 +262,34 @@ namespace JsonStthm
 			}
 			if (!bCompact)
 			{
-				sOutJson += "\n";
-				sOutJson += sIndent;
+				sOutJson += '\n';
+				sOutJson.PushRange(sIndent.Data(), sIndent.Size());
 			}
-			sOutJson += "]";
+			sOutJson += ']';
 		}
 		else if (m_eType == E_TYPE_STRING)
 		{
-			sOutJson += "\"";
+			sOutJson += '\"';
 			WriteStringEscaped(sOutJson, m_pString);
-			sOutJson += "\"";
+			sOutJson += '\"';
 		}
 		else if (m_eType == E_TYPE_BOOLEAN)
 		{
 			if (m_bBoolean)
 			{
-				sOutJson += "true";
+				sOutJson.PushRange("true", 4);
 			}
 			else
 			{
-				sOutJson += "false";
+				sOutJson.PushRange("false", 5);
 			}
 		}
 		else if (m_eType == E_TYPE_INTEGER)
 		{
 			char sBuffer[256];
-			sprintf_s(sBuffer, 256, "%d", m_iInteger);
-			sOutJson += sBuffer;
+			int iLen = sprintf_s(sBuffer, 256, "%d", m_iInteger);
+			iLen = strlen(sBuffer);
+			sOutJson.PushRange(sBuffer, iLen);
 		}
 		else if (m_eType == E_TYPE_FLOAT)
 		{
@@ -302,55 +309,56 @@ namespace JsonStthm
 			{
 				sprintf_s(sBuffer, 256, "%.17Lg", m_fFloat);
 			}
-			sOutJson += sBuffer;
+			int iLen = strlen(sBuffer);
+			sOutJson.PushRange(sBuffer, iLen);
 		}
 		else
 		{
-			sOutJson += "null";
+			sOutJson.PushRange("null", 4);
 		}
 	}
 
-	void JsonValue::WriteStringEscaped(String& sOutJson, const String& sInput)
+	void JsonValue::WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pInput)
 	{
-		const char* pString = sInput.c_str();
-		while (*pString != '\0')
+		while (*pInput != '\0')
 		{
-			char cChar = *pString;
+			char cChar = *pInput;
 			if (cChar == '\n')
-				sOutJson += "\\n";
+				
+				sOutJson.PushRange("\\n", 2);
 			else if (cChar == '\r')
-				sOutJson += "\\r";
+				sOutJson.PushRange("\\r", 2);
 			else if (cChar == '\t')
-				sOutJson += "\\t";
+				sOutJson.PushRange("\\t", 2);
 			else if (cChar == '\b')
-				sOutJson += "\\b";
+				sOutJson.PushRange("\\b", 2);
 			else if (cChar == '\f')
-				sOutJson += "\\f";
+				sOutJson.PushRange("\\f", 2);
 			else if (cChar == '"')
-				sOutJson += "\\\"";
+				sOutJson.PushRange("\\\"", 2);
 			else if (cChar == '\\')
-				sOutJson += "\\\\";
+				sOutJson.PushRange("\\\\", 2);
 			else if ((unsigned char)cChar < 0x80)
 				sOutJson += cChar;
 			else
 			{
-				sOutJson += "\\u";
+				sOutJson += '\\u';
 				unsigned int iChar = (unsigned char)cChar;
 
 				if ((iChar & 0xF0) == 0xF0) // 4 bytes
 				{
-					iChar = ((((unsigned char)*(pString)) & 0x07) << 18) + ((((unsigned char)*(pString + 1)) & 0x3F) << 12) + ((((unsigned char)*(pString + 2)) & 0x3F) << 6) + ((((unsigned char)*(pString + 3)) & 0x3F));
-					pString += 3;
+					iChar = ((((unsigned char)*(pInput)) & 0x07) << 18) + ((((unsigned char)*(pInput + 1)) & 0x3F) << 12) + ((((unsigned char)*(pInput + 2)) & 0x3F) << 6) + ((((unsigned char)*(pInput + 3)) & 0x3F));
+					pInput += 3;
 				}
 				else if ((iChar & 0xF0) == 0xE0) // 3 bytes
 				{
-					iChar = ((((unsigned char)*(pString)) & 0x0F) << 12) + ((((unsigned char)*(pString + 1)) & 0x3F) << 6) + ((((unsigned char)*(pString + 2)) & 0x3F));
-					pString += 2;
+					iChar = ((((unsigned char)*(pInput)) & 0x0F) << 12) + ((((unsigned char)*(pInput + 1)) & 0x3F) << 6) + ((((unsigned char)*(pInput + 2)) & 0x3F));
+					pInput += 2;
 				}
 				else if ((iChar & 0xF0) == 0xC0) // 2 byte
 				{
-					iChar = ((((unsigned char)*(pString)) & 0x1F) << 6) + ((((unsigned char)*(pString + 1)) & 0x3F));
-					pString += 1;
+					iChar = ((((unsigned char)*(pInput)) & 0x1F) << 6) + ((((unsigned char)*(pInput + 1)) & 0x3F));
+					pInput += 1;
 				}
 				
 
@@ -362,26 +370,31 @@ namespace JsonStthm
 				sHexa[3] = pHexa[(iChar) & 0x0f];
 				sHexa[4] = '\0';
 				
-				sOutJson += sHexa;
+				sOutJson.PushRange(sHexa, 4);
 			}
 
-			++pString;
+			++pInput;
 		}
 	}
 
-	void JsonValue::WriteString(String& sOutJson, bool bCompact)
+#ifdef STTHM_USE_STD_STRING
+	void JsonValue::WriteString(std::string& sOutJson, bool bCompact)
 	{
-		Write(sOutJson, 0, bCompact);
+		Internal::CharBuffer oBuffer;
+		Write(oBuffer, 0, bCompact);
+		sOutJson.resize(oBuffer.Size());
+		oBuffer.WriteTo((char*)sOutJson.data());
 	}
+#endif //STTHM_USE_STD_STRING
 
 	bool JsonValue::WriteFile(const char* pFilename, bool bCompact)
 	{
 		FILE* pFile = fopen(pFilename, "w");
 		if (NULL != pFile)
 		{
-			String sJson;
-			WriteString(sJson, bCompact);
-			bool bRet = fwrite(sJson.c_str(), sizeof(char), sJson.length(), pFile) == (sizeof(char) * sJson.length());
+			Internal::CharBuffer sJson;
+			Write(sJson, 0, bCompact);
+			bool bRet = fwrite(sJson.Data(), sizeof(char), sJson.Size(), pFile) == (sizeof(char) * sJson.Size());
 			fclose(pFile);
 			return bRet;
 		}
@@ -566,24 +579,25 @@ namespace JsonStthm
 		}
 		else if (oValue.m_eType == E_TYPE_BOOLEAN)
 		{
-			*this = (bool)oValue;
+			*this = oValue.ToBoolean();
 		}
 		else if (oValue.m_eType == E_TYPE_STRING)
 		{
-			*this = (String)oValue;
+			*this = oValue.ToString();
 		}
 		else if (oValue.m_eType == E_TYPE_INTEGER)
 		{
-			*this = (long)oValue;
+			*this = oValue.ToInteger();
 		}
 		else if (oValue.m_eType == E_TYPE_FLOAT)
 		{
-			*this = (double)oValue;
+			*this = oValue.ToFloat();
 		}
 		return *this;
 	}
 
-	JsonValue& JsonValue::operator =(const String& sValue)
+#ifdef STTHM_USE_STD_STRING
+	JsonValue& JsonValue::operator =(const std::string& sValue)
 	{
 		if (!m_bConst)
 		{
@@ -592,6 +606,7 @@ namespace JsonStthm
 		}
 		return *this;
 	}
+#endif //STTHM_USE_STD_STRING
 
 	JsonValue& JsonValue::operator =(const char* pValue)
 	{
@@ -657,9 +672,15 @@ namespace JsonStthm
 		{
 			if (oValue.IsString())
 			{
-				String sValue = m_pString;
-				sValue += (String)oValue;
-				SetString(sValue.c_str());
+				Internal::CharBuffer oNewStr;
+				const char* pAddString = oValue.ToString();
+				size_t iLen1 = strlen(m_pString);
+				size_t iLen2 = strlen(pAddString);
+				oNewStr.Reserve(iLen1 + iLen2 + 1);
+				oNewStr.PushRange(m_pString, iLen1);
+				oNewStr.PushRange(pAddString, iLen2);
+				oNewStr.Push(0);
+				SetString(oNewStr.Data());
 			}
 		}
 		return *this;
