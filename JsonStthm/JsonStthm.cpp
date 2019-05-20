@@ -69,40 +69,58 @@ namespace JsonStthm
 	}
 
 	JsonValue::JsonValue(const JsonValue& oSource)
-		: JsonValue()
+		: m_bConst(false)
+		, m_eType(E_TYPE_INVALID)
+		, m_pName(NULL)
+		, m_pNext(NULL)
 	{
 		m_bConst = oSource.m_bConst;
 		*this = oSource;
 	}
 
 	JsonValue::JsonValue(bool bValue)
-		: JsonValue()
+		: m_bConst(false)
+		, m_eType(E_TYPE_INVALID)
+		, m_pName(NULL)
+		, m_pNext(NULL)
 	{
 		*this = bValue;
 	}
 
 #ifdef STTHM_USE_STD_STRING
 	JsonValue::JsonValue(const std::string& sValue)
-		: JsonValue()
+		: m_bConst(false)
+		, m_eType(E_TYPE_INVALID)
+		, m_pName(NULL)
+		, m_pNext(NULL)
 	{
 		*this = sValue;
 	}
 #endif //STTHM_USE_STD_STRING
 
 	JsonValue::JsonValue(const char* pValue)
-		: JsonValue()
+		: m_bConst(false)
+		, m_eType(E_TYPE_INVALID)
+		, m_pName(NULL)
+		, m_pNext(NULL)
 	{
 		*this = pValue;
 	}
 
 	JsonValue::JsonValue(long iValue)
-		: JsonValue()
+		: m_bConst(false)
+		, m_eType(E_TYPE_INVALID)
+		, m_pName(NULL)
+		, m_pNext(NULL)
 	{
 		*this = iValue;
 	}
 
 	JsonValue::JsonValue(double fValue)
-		: JsonValue()
+		: m_bConst(false)
+		, m_eType(E_TYPE_INVALID)
+		, m_pName(NULL)
+		, m_pNext(NULL)
 	{
 		*this = fValue;
 	}
