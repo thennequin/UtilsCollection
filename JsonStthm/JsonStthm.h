@@ -56,7 +56,7 @@ namespace JsonStthm
 						T* pTemp = (T*)StthmMalloc(iCapacity * sizeof(T));
 						if (NULL != m_pData)
 						{
-							memcpy(pTemp, m_pData, (m_iCapacity > iCapacity ? m_iCapacity : iCapacity) * sizeof(T));
+							memcpy(pTemp, m_pData, m_iCapacity * sizeof(T));
 							if (!m_bUseHeap)
 								StthmFree(m_pData);
 						}
