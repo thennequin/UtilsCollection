@@ -2,13 +2,28 @@
 #include "JsonStthm.h"
 
 #include <stdio.h> // FILE, fopen, fclose, fwrite, fread
-#include <math.h> // isnan, isinf
+#include <math.h> // fpclassify, FP_NAN, FP_INFINITE
 
 // Experimental long/double parser
 //#define STTHM_USE_CUSTOM_NUMERIC_PARSER
 
 namespace JsonStthm
 {
+	namespace Internal
+	{
+		const double c_fInfinity = 1e+300 * 1e+300;
+		const double c_fNaN = c_fInfinity * 0.f;
+
+		bool IsNaN(double x)
+		{
+			return fpclassify(x) == FP_NAN;
+		}
+
+		bool IsInf(double x)
+		{
+			return fpclassify(x) == FP_INFINITE;
+		}
+	}
 	//////////////////////////////
 	// JsonValue::Iterator
 	//////////////////////////////
@@ -312,11 +327,11 @@ namespace JsonStthm
 		else if (m_eType == E_TYPE_FLOAT)
 		{
 			char sBuffer[256];
-			if (isnan(m_fFloat))
+			if (Internal::IsNaN(m_fFloat))
 			{
 				sprintf_s( sBuffer, 256, "NaN" );
 			}
-			else if (isinf(m_fFloat))
+			else if (Internal::IsInf(m_fFloat))
 			{
 				if (m_fFloat < 0.f)
 					sprintf_s(sBuffer, 256, "-Infinity");
@@ -1088,19 +1103,19 @@ namespace JsonStthm
 			else if (memcmp(pString, "NaN", 3) == 0 )
 			{
 				pString += 3;
-				*this = NAN;
+				*this = Internal::c_fNaN;
 				break;
 			}
 			else if (memcmp(pString, "-Infinity", 9) == 0 )
 			{
 				pString += 9;
-				*this = -INFINITY;
+				*this = -Internal::c_fInfinity;
 				break;
 			}
 			else if (memcmp(pString, "Infinity", 8) == 0 )
 			{
 				pString += 8;
-				*this = INFINITY;
+				*this = Internal::c_fInfinity;
 				break;
 			}
 			else if (IsDigit(*pString) || *pString == '-')
