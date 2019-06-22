@@ -320,30 +320,30 @@ namespace JsonStthm
 		else if (m_eType == E_TYPE_INTEGER)
 		{
 			char sBuffer[256];
-			int iLen = sprintf_s(sBuffer, 256, "%d", m_iInteger);
-			iLen = strlen(sBuffer);
+			sprintf_s(sBuffer, 256, "%d", m_iInteger);
+			size_t iLen = strlen(sBuffer);
 			sOutJson.PushRange(sBuffer, iLen);
 		}
 		else if (m_eType == E_TYPE_FLOAT)
 		{
-			char sBuffer[256];
 			if (Internal::IsNaN(m_fFloat))
 			{
-				sprintf_s( sBuffer, 256, "NaN" );
+				sOutJson.PushRange("NaN", 3);
 			}
 			else if (Internal::IsInf(m_fFloat))
 			{
 				if (m_fFloat < 0.f)
-					sprintf_s(sBuffer, 256, "-Infinity");
+					sOutJson.PushRange("-Infinity", 9);
 				else
-					sprintf_s(sBuffer, 256, "Infinity");
+					sOutJson.PushRange("Infinity", 8);
 			}
 			else
 			{
+				char sBuffer[256];
 				sprintf_s(sBuffer, 256, "%.17Lg", m_fFloat);
+				size_t iLen = strlen(sBuffer);
+				sOutJson.PushRange(sBuffer, iLen);
 			}
-			int iLen = strlen(sBuffer);
-			sOutJson.PushRange(sBuffer, iLen);
 		}
 		else
 		{
