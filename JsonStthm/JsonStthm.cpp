@@ -360,7 +360,7 @@ namespace JsonStthm
 				sOutJson += cChar;
 			else
 			{
-				sOutJson += '\\u';
+				sOutJson.PushRange("\\u", 2);
 				unsigned int iChar = (unsigned char)cChar;
 
 				if ((iChar & 0xF0) == 0xF0) // 4 bytes
