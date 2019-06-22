@@ -14,11 +14,11 @@ namespace JsonStthm
 {
 	namespace Internal
 	{
-		template <typename T, int HeapSize = 1024>
+		template <typename T, size_t HeapSize = 1024>
 		struct Buffer
 		{
 		public:
-			Buffer(int iReserve = 8)
+			Buffer(size_t iReserve = 8)
 			{
 				m_pData = m_pHeapData;
 				m_iSize = m_iCapacity = 0;
@@ -26,13 +26,13 @@ namespace JsonStthm
 				Reserve(iReserve);
 			}
 
-			Buffer(int iSize, const T& oValue)
+			Buffer(size_t iSize, const T& oValue)
 			{
 				m_pData = m_pHeapData;
 				m_iSize = m_iCapacity = 0;
 				m_bUseHeap = true;
 				Resize(iSize);
-				for (int i = 0; i < iSize; ++i)
+				for (size_t i = 0; i < iSize; ++i)
 				{
 					m_pData[i] = oValue;
 				}
@@ -68,12 +68,12 @@ namespace JsonStthm
 					memcpy(&m_pData[m_iSize - iLength], pBegin, iLength);
 			}
 
-			int Size() const
+			size_t Size() const
 			{
 				return m_iSize;
 			}
 
-			void Reserve(int iCapacity, bool bForceAlloc = false)
+			void Reserve(size_t iCapacity, bool bForceAlloc = false)
 			{
 				if (iCapacity != m_iCapacity)
 				{
@@ -94,9 +94,9 @@ namespace JsonStthm
 				}
 			}
 
-			void Resize(int iSize)
+			void Resize(size_t iSize)
 			{
-				int iNewCapacity = m_iCapacity > 0 ? m_iCapacity : 8;
+				size_t iNewCapacity = m_iCapacity > 0 ? m_iCapacity : 8;
 				while (iSize > iNewCapacity)
 					iNewCapacity *= 2;
 				if (iNewCapacity != m_iCapacity)
@@ -137,8 +137,8 @@ namespace JsonStthm
 		protected:
 			T		m_pHeapData[HeapSize];
 			T*		m_pData;
-			int		m_iSize;
-			int		m_iCapacity;
+			size_t	m_iSize;
+			size_t	m_iCapacity;
 			bool	m_bUseHeap;
 		};
 
@@ -223,7 +223,7 @@ namespace JsonStthm
 
 		const JsonValue&	operator [](int iIndex) const;
 		JsonValue&			operator [](int iIndex);
-		
+
 		JsonValue&			operator =(const JsonValue& oValue);
 #ifdef STTHM_USE_STD_STRING
 		JsonValue&			operator =(const std::string& sValue);
@@ -243,7 +243,7 @@ namespace JsonStthm
 		static JsonValue	CreateConst();
 		void				Reset();
 		void				SetString(const char* pString);
-		
+
 		void				Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact);
 		static void			WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pBuffer);
 
