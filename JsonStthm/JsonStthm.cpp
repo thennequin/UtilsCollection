@@ -248,7 +248,7 @@ namespace JsonStthm
 					sOutJson += '\n';
 					sOutJson.PushRange(sIndent2.Data(), sIndent2.Size());
 				}
-				
+
 				sOutJson += '\"';
 				WriteStringEscaped(sOutJson, pChild->m_pName);
 				sOutJson += '\"';
@@ -357,22 +357,37 @@ namespace JsonStthm
 		{
 			char cChar = *pInput;
 			if (cChar == '\n')
-				
+			{
 				sOutJson.PushRange("\\n", 2);
+			}
 			else if (cChar == '\r')
+			{
 				sOutJson.PushRange("\\r", 2);
+			}
 			else if (cChar == '\t')
+			{
 				sOutJson.PushRange("\\t", 2);
+			}
 			else if (cChar == '\b')
+			{
 				sOutJson.PushRange("\\b", 2);
+			}
 			else if (cChar == '\f')
+			{
 				sOutJson.PushRange("\\f", 2);
+			}
 			else if (cChar == '"')
+			{
 				sOutJson.PushRange("\\\"", 2);
+			}
 			else if (cChar == '\\')
+			{
 				sOutJson.PushRange("\\\\", 2);
+			}
 			else if ((unsigned char)cChar < 0x80)
+			{
 				sOutJson += cChar;
+			}
 			else
 			{
 				sOutJson.PushRange("\\u", 2);
@@ -393,7 +408,7 @@ namespace JsonStthm
 					iChar = ((((unsigned char)*(pInput)) & 0x1F) << 6) + ((((unsigned char)*(pInput + 1)) & 0x3F));
 					pInput += 1;
 				}
-				
+
 
 				char sHexa[5];
 				const char* const  pHexa = "0123456789ABCDEF";
@@ -402,7 +417,7 @@ namespace JsonStthm
 				sHexa[2] = pHexa[(iChar >> 4) & 0x0f];
 				sHexa[3] = pHexa[(iChar) & 0x0f];
 				sHexa[4] = '\0';
-				
+
 				sOutJson.PushRange(sHexa, 4);
 			}
 
@@ -520,12 +535,12 @@ namespace JsonStthm
 			if (!m_bConst)
 			{
 				JsonValue* pNewMember = new JsonValue();
-				
+
 				size_t iNameLen = strlen(pName) + 1;
 				void* pNewString = StthmMalloc(iNameLen);
 				memcpy(pNewString, (const void*)pName, iNameLen);
 				pNewMember->m_pName = (char*)pNewString;
-				
+
 				if (NULL != m_oChilds.m_pLast)
 					m_oChilds.m_pLast->m_pNext = pNewMember;
 				else
@@ -595,7 +610,7 @@ namespace JsonStthm
 		if (oValue.m_eType == E_TYPE_OBJECT || oValue.m_eType == E_TYPE_ARRAY)
 		{
 			InitType(oValue.m_eType);
-			
+
 			JsonValue* pSourceChild = oValue.m_oChilds.m_pFirst;;
 			while (pSourceChild != NULL)
 			{
@@ -693,12 +708,12 @@ namespace JsonStthm
 		if (m_eType == E_TYPE_ARRAY)
 		{
 			JsonValue* pNewValue = new JsonValue(oValue);
-			
+
 			if (NULL != m_oChilds.m_pLast)
 				m_oChilds.m_pLast->m_pNext = pNewValue;
 			else
 				m_oChilds.m_pFirst = pNewValue;
-			
+
 			m_oChilds.m_pLast = pNewValue;
 		}
 		else if (m_eType == E_TYPE_STRING)
@@ -941,7 +956,7 @@ namespace JsonStthm
 			pString = pEndLong;
 			oValue = iValue;
 		}
-		
+
 		return true;
 	#endif // !STTHM_USE_CUSTOM_NUMERIC_PARSER
 	}
@@ -973,7 +988,7 @@ namespace JsonStthm
 
 			if (*pString != ':')
 				return false;
-			
+
 			++pString;
 
 			SkipSpaces(pString);
@@ -1026,7 +1041,7 @@ namespace JsonStthm
 			SkipSpaces(pString);
 
 			JsonValue* pNewValue = new JsonValue();
-			
+
 			if (!pNewValue->Parse(pString, oTempBuffer))
 			{
 				delete pNewValue;
