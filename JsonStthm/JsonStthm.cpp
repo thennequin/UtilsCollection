@@ -2,7 +2,6 @@
 #include "JsonStthm.h"
 
 #include <stdio.h> // FILE, fopen, fclose, fwrite, fread
-#include <math.h> // fpclassify, FP_NAN, FP_INFINITE
 
 // Experimental long/double parser
 //#define STTHM_USE_CUSTOM_NUMERIC_PARSER
@@ -11,19 +10,25 @@ namespace JsonStthm
 {
 	namespace Internal
 	{
-		const double c_fInfinity = 1e+300 * 1e+300;
-		const double c_fNaN = c_fInfinity * 0.f;
+		const unsigned long _c_lInfinity[2]	= { 0x00000000, 0x7ff00000 };
+		const unsigned long _c_lNaN[2]		= { 0x00000000, 0x7ff80000 };
+
+		const double c_fInfinity			= *(double*)&_c_lInfinity;
+		const double c_fNegativeInfinity	= -c_fInfinity;
+		const double c_fNaN					= *(double*)&_c_lNaN;
 
 		bool IsNaN(double x)
 		{
-			return fpclassify(x) == FP_NAN;
+			return memcmp(&c_fNaN, &x, sizeof(double)) == 0;
 		}
 
-		bool IsInf(double x)
+		bool IsInfinite(double x)
 		{
-			return fpclassify(x) == FP_INFINITE;
+			return memcmp(&c_fInfinity, &x, sizeof(double)) == 0
+				|| memcmp(&c_fNegativeInfinity, &x, sizeof(double)) == 0;
 		}
 	}
+
 	//////////////////////////////
 	// JsonValue::Iterator
 	//////////////////////////////
@@ -330,7 +335,7 @@ namespace JsonStthm
 			{
 				sOutJson.PushRange("NaN", 3);
 			}
-			else if (Internal::IsInf(m_fFloat))
+			else if (Internal::IsInfinite(m_fFloat))
 			{
 				if (m_fFloat < 0.f)
 					sOutJson.PushRange("-Infinity", 9);
