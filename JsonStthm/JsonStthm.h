@@ -218,6 +218,9 @@ namespace JsonStthm
 		long				ToInteger() const;
 		double				ToFloat() const;
 
+		bool				operator ==(const JsonValue& oRight);
+		bool				operator !=(const JsonValue& oRight);
+
 		const JsonValue&	operator [](const char* pName) const;
 		JsonValue&			operator [](const char* pName);
 

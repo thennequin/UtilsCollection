@@ -502,6 +502,69 @@ namespace JsonStthm
 		return 0.0;
 	}
 
+	bool JsonValue::operator ==(const JsonValue& oRight)
+	{
+		if (m_eType != oRight.m_eType)
+			return false;
+
+		switch (m_eType)
+		{
+		case E_TYPE_OBJECT:
+		{
+			// We don't care if members order is not the same
+			JsonValue* pChildLeft = m_oChilds.m_pFirst;
+			while (pChildLeft != NULL)
+			{
+				if (*pChildLeft != oRight[pChildLeft->m_pString])
+					return false;
+
+				pChildLeft = pChildLeft->m_pNext;
+			}
+			break;
+		}
+		case E_TYPE_ARRAY:
+		{
+			JsonValue* pChildLeft = m_oChilds.m_pFirst;
+			JsonValue* pChildRight = oRight.m_oChilds.m_pFirst;
+			while (pChildLeft != NULL && pChildRight != NULL)
+			{
+				if (*pChildLeft != *pChildRight)
+					return false;
+
+				pChildLeft = pChildLeft->m_pNext;
+				pChildRight = pChildRight->m_pNext;
+			}
+
+			if (pChildLeft != NULL || pChildRight != NULL)
+				return false;
+			break;
+		}
+		case E_TYPE_STRING:
+			if (strcmp(m_pString, oRight.m_pString) != 0)
+				return false;
+			break;
+		case E_TYPE_BOOLEAN:
+			if (memcmp(&m_bBoolean, &oRight.m_bBoolean, sizeof(m_bBoolean)) != 0)
+				return false;
+			break;
+		case E_TYPE_INTEGER:
+			if (memcmp(&m_iInteger, &oRight.m_iInteger, sizeof(m_iInteger)) != 0)
+				return false;
+			break;
+		case E_TYPE_FLOAT:
+			if (memcmp(&m_fFloat, &oRight.m_fFloat, sizeof(m_fFloat)) != 0)
+				return false;
+			break;
+		}
+
+		return true;
+	}
+
+	bool JsonValue::operator !=(const JsonValue& oRight)
+	{
+		return (*this == oRight) == false;
+	}
+
 	const JsonValue& JsonValue::operator[](const char* pName) const
 	{
 		if (m_eType == E_TYPE_OBJECT)
