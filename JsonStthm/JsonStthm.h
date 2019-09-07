@@ -53,19 +53,13 @@ namespace JsonStthm
 			void Push(const T& oValue)
 			{
 				Resize(m_iSize + 1);
-				if (m_bUseHeap)
-					m_pHeapData[m_iSize - 1] = oValue;
-				else
-					m_pData[m_iSize - 1] = oValue;
+				m_pData[m_iSize - 1] = oValue;
 			}
 
 			void PushRange(const T* pBegin, size_t iLength)
 			{
 				Resize(m_iSize + iLength);
-				if (m_bUseHeap)
-					memcpy(&m_pHeapData[m_iSize - iLength], pBegin, iLength);
-				else
-					memcpy(&m_pData[m_iSize - iLength], pBegin, iLength);
+				memcpy(&m_pData[m_iSize - iLength], pBegin, iLength);
 			}
 
 			size_t Size() const
@@ -80,12 +74,10 @@ namespace JsonStthm
 					if (!m_bUseHeap || iCapacity >= HeapSize || bForceAlloc)
 					{
 						T* pTemp = (T*)StthmMalloc(iCapacity * sizeof(T));
-						if (NULL != m_pData)
-						{
-							memcpy(pTemp, m_pData, m_iCapacity * sizeof(T));
-							if (!m_bUseHeap)
-								StthmFree(m_pData);
-						}
+						JsonStthmAssert(pTemp != NULL);
+						memcpy(pTemp, m_pData, m_iSize * sizeof(T));
+						if (!m_bUseHeap)
+							StthmFree(m_pData);
 						m_pData = pTemp;
 						m_bUseHeap = false;
 					}
@@ -104,7 +96,7 @@ namespace JsonStthm
 				m_iSize = iSize;
 			}
 
-			const T* Data() const { return m_bUseHeap ? m_pHeapData : m_pData; }
+			const T* Data() const { return m_pData; }
 
 			T* Take()
 			{
@@ -122,6 +114,7 @@ namespace JsonStthm
 				m_iCapacity = 0;
 				m_iSize = 0;
 				m_bUseHeap = true;
+				m_pData = m_pHeapData;
 				return pTemp;
 			}
 

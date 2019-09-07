@@ -12,6 +12,9 @@
 #define NULL 0
 #endif 
 
+#include <assert.h>
+#define JsonStthmAssert(bCondition) assert((bCondition))
+
 #include <stdlib.h> // malloc, free
 
 #define StthmMalloc(iSize) malloc(iSize)
