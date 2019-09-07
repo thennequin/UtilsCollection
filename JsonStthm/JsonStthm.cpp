@@ -127,7 +127,7 @@ namespace JsonStthm
 		*this = pValue;
 	}
 
-	JsonValue::JsonValue(long iValue)
+	JsonValue::JsonValue(int64_t iValue)
 		: m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
@@ -325,7 +325,7 @@ namespace JsonStthm
 		else if (m_eType == E_TYPE_INTEGER)
 		{
 			char sBuffer[256];
-			sprintf_s(sBuffer, 256, "%d", m_iInteger);
+			sprintf_s(sBuffer, 256, "%lld", m_iInteger);
 			size_t iLen = strlen(sBuffer);
 			sOutJson.PushRange(sBuffer, iLen);
 		}
@@ -493,12 +493,12 @@ namespace JsonStthm
 		return false;
 	}
 
-	long JsonValue::ToInteger() const
+	int64_t JsonValue::ToInteger() const
 	{
 		if (m_eType == E_TYPE_INTEGER)
 			return m_iInteger;
 		else if (m_eType == E_TYPE_FLOAT)
-			return (long)m_fFloat;
+			return (int64_t)m_fFloat;
 		return 0;
 	}
 
@@ -760,7 +760,7 @@ namespace JsonStthm
 		return *this;
 	}
 
-	JsonValue& JsonValue::operator =(long iValue)
+	JsonValue& JsonValue::operator =(int64_t iValue)
 	{
 		if (!m_bConst)
 		{
@@ -1016,14 +1016,14 @@ namespace JsonStthm
 		else
 		{
 			//TODO manage E/e for long?
-			oValue = (long)(bNeg ? -lValue : lValue);
+			oValue = (int64_t)(bNeg ? -lValue : lValue);
 		}
 		return true;
 	#else //STTHM_USE_CUSTOM_NUMERIC_PARSER
 		char* pEndDouble;
 		char* pEndLong;
 		double fValue = strtod( pString, &pEndDouble );
-		long iValue = strtol( pString, &pEndLong, 10 );
+		long long iValue = strtoll( pString, &pEndLong, 10 );
 		if( pEndDouble > pEndLong )
 		{
 			pString = pEndDouble;

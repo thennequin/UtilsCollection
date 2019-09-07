@@ -4,7 +4,8 @@
 
 #include "JsonStthmConfig.h"
 
-#include <string.h>
+#include <string.h> //memcpy
+#include <stdint.h> //int64_t
 
 #ifdef STTHM_USE_STD_STRING
 #include <string>
@@ -176,7 +177,7 @@ namespace JsonStthm
 							JsonValue(const std::string& sValue);
 #endif //STTHM_USE_STD_STRING
 							JsonValue(const char* pValue);
-							JsonValue(long iValue);
+							JsonValue(int64_t iValue);
 							JsonValue(double fValue);
 							~JsonValue();
 
@@ -208,7 +209,7 @@ namespace JsonStthm
 
 		const char*			ToString() const;
 		bool				ToBoolean() const;
-		long				ToInteger() const;
+		int64_t				ToInteger() const;
 		double				ToFloat() const;
 
 		bool				operator ==(const JsonValue& oRight);
@@ -226,7 +227,7 @@ namespace JsonStthm
 #endif //STTHM_USE_STD_STRING
 		JsonValue&			operator =(const char* pValue);
 		JsonValue&			operator =(bool bValue);
-		JsonValue&			operator =(long iValue);
+		JsonValue&			operator =(int64_t iValue);
 		JsonValue&			operator =(double fValue);
 
 		JsonValue&			operator +=(const JsonValue& oValue);
@@ -258,7 +259,7 @@ namespace JsonStthm
 			JsonChilds		m_oChilds;
 			char*			m_pString;
 			bool			m_bBoolean;
-			long			m_iInteger;
+			int64_t			m_iInteger;
 			double			m_fFloat;
 		};
 
