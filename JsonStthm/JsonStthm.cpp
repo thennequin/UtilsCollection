@@ -397,23 +397,32 @@ namespace JsonStthm
 			{
 				sOutJson.PushRange("\\u", 2);
 				unsigned int iChar = (unsigned char)cChar;
-
-				if ((iChar & 0xF0) == 0xF0) // 4 bytes
+				if ((iChar & 0xE0) == 0xC0) // 2 byte
 				{
-					iChar = ((((unsigned char)*(pInput)) & 0x07) << 18) + ((((unsigned char)*(pInput + 1)) & 0x3F) << 12) + ((((unsigned char)*(pInput + 2)) & 0x3F) << 6) + ((((unsigned char)*(pInput + 3)) & 0x3F));
-					pInput += 3;
+					iChar = ((((unsigned char)pInput[0]) & 0x1F) << 6)
+						+	((((unsigned char)pInput[1]) & 0x3F));
+					pInput += 1;
 				}
 				else if ((iChar & 0xF0) == 0xE0) // 3 bytes
 				{
-					iChar = ((((unsigned char)*(pInput)) & 0x0F) << 12) + ((((unsigned char)*(pInput + 1)) & 0x3F) << 6) + ((((unsigned char)*(pInput + 2)) & 0x3F));
+					iChar = ((((unsigned char)pInput[0]) & 0x0F) << 12) 
+						+	((((unsigned char)pInput[1]) & 0x3F) << 6) 
+						+	((((unsigned char)pInput[2]) & 0x3F));
 					pInput += 2;
 				}
-				else if ((iChar & 0xF0) == 0xC0) // 2 byte
+				else if ((iChar & 0xF8) == 0xF0 && iChar <= 0xF4) // 4 bytes
 				{
-					iChar = ((((unsigned char)*(pInput)) & 0x1F) << 6) + ((((unsigned char)*(pInput + 1)) & 0x3F));
-					pInput += 1;
+					iChar = ((((unsigned char)pInput[0]) & 0x07) << 18)
+						+	((((unsigned char)pInput[1]) & 0x3F) << 12)
+						+	((((unsigned char)pInput[2]) & 0x3F) << 6)
+						+	((((unsigned char)pInput[3]) & 0x3F));
+					pInput += 3;
 				}
-
+				else
+				{
+					//Invalid char
+					iChar = -1;
+				}
 
 				char sHexa[5];
 				const char* const  pHexa = "0123456789ABCDEF";
