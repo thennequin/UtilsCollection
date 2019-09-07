@@ -81,10 +81,10 @@ namespace JsonStthm
 	JsonValue JsonValue::INVALID = JsonValue::CreateConst();
 
 	JsonValue::JsonValue()
-		: m_bConst( false )
-		, m_eType( E_TYPE_INVALID )
-		, m_pName( NULL )
-		, m_pNext( NULL )
+		: m_bConst(false)
+		, m_eType(E_TYPE_INVALID)
+		, m_pName(NULL)
+		, m_pNext(NULL)
 	{
 	}
 
@@ -931,7 +931,6 @@ namespace JsonStthm
 		{
 			oValue.InitType(E_TYPE_STRING);
 			oValue.m_pString = oTempBuffer.Take();
-			//oValue = oTempBuffer.Data();//Use Take();
 			return true;
 		}
 		return false;
