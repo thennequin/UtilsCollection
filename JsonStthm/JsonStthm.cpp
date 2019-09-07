@@ -515,7 +515,7 @@ namespace JsonStthm
 			JsonValue* pChildLeft = m_oChilds.m_pFirst;
 			while (pChildLeft != NULL)
 			{
-				if (*pChildLeft != oRight[pChildLeft->m_pString])
+				if (*pChildLeft != oRight[pChildLeft->m_pName])
 					return false;
 
 				pChildLeft = pChildLeft->m_pNext;
