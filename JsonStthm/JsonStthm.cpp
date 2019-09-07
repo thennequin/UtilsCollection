@@ -511,7 +511,7 @@ namespace JsonStthm
 		return 0.0;
 	}
 
-	bool JsonValue::operator ==(const JsonValue& oRight)
+	bool JsonValue::operator ==(const JsonValue& oRight) const
 	{
 		if (m_eType != oRight.m_eType)
 			return false;
@@ -521,7 +521,7 @@ namespace JsonStthm
 		case E_TYPE_OBJECT:
 		{
 			// We don't care if members order is not the same
-			JsonValue* pChildLeft = m_oChilds.m_pFirst;
+			const JsonValue* pChildLeft = m_oChilds.m_pFirst;
 			while (pChildLeft != NULL)
 			{
 				if (*pChildLeft != oRight[pChildLeft->m_pName])
@@ -569,7 +569,7 @@ namespace JsonStthm
 		return true;
 	}
 
-	bool JsonValue::operator !=(const JsonValue& oRight)
+	bool JsonValue::operator !=(const JsonValue& oRight) const
 	{
 		return (*this == oRight) == false;
 	}
