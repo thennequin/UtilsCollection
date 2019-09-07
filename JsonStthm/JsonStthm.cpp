@@ -10,16 +10,24 @@ namespace JsonStthm
 {
 	namespace Internal
 	{
-		const unsigned long _c_lInfinity[2]	= { 0x00000000, 0x7ff00000 };
-		const unsigned long _c_lNaN[2]		= { 0x00000000, 0x7ff80000 };
+		const uint32_t _c_lInfinity[2]			= { 0x00000000, 0x7ff00000 };
+		const uint32_t _c_lNaN[2]				= { 0x00000000, 0x7ff80000 };
+		const uint32_t _c_lNaNMask				= 0x7ff00000;
+		const uint32_t _c_lNaNPayloadMask[2]	= { 0xffffFFFF, 0x000fFFFF };
 
-		const double c_fInfinity			= *(double*)&_c_lInfinity;
-		const double c_fNegativeInfinity	= -c_fInfinity;
-		const double c_fNaN					= *(double*)&_c_lNaN;
+		const double c_fInfinity				= *(double*)&_c_lInfinity;
+		const double c_fNegativeInfinity		= -c_fInfinity;
+		const double c_fNaN						= *(double*)&_c_lNaN;
 
 		bool IsNaN(double x)
 		{
-			return memcmp(&c_fNaN, &x, sizeof(double)) == 0;
+			// Checking NaN Payload not equal 0
+			uint32_t* pLong = (uint32_t*)&x;
+			return (pLong[1] & _c_lNaNMask) == _c_lNaNMask &&
+				(
+					(pLong[0] & _c_lNaNPayloadMask[0]) != 0 ||
+					(pLong[1] & _c_lNaNPayloadMask[1]) != 0
+				);
 		}
 
 		bool IsInfinite(double x)
