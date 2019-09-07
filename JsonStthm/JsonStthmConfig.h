@@ -17,8 +17,8 @@
 
 #include <stdlib.h> // malloc, free
 
-#define StthmMalloc(iSize) malloc(iSize)
-#define StthmFree(pObj) free(pObj)
+#define JsonStthmMalloc(iSize) malloc(iSize)
+#define JsonStthmFree(pObj) free(pObj)
 
 #define STTHM_USE_STD_STRING
 

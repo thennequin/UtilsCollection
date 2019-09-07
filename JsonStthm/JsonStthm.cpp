@@ -147,7 +147,7 @@ namespace JsonStthm
 
 	JsonValue::~JsonValue()
 	{
-		StthmFree(m_pName);
+		JsonStthmFree(m_pName);
 		m_pName = NULL;
 		Reset();
 	}
@@ -206,7 +206,7 @@ namespace JsonStthm
 		}
 		break;
 		case E_TYPE_STRING:
-			StthmFree(m_pString);
+			JsonStthmFree(m_pString);
 			m_pString = NULL;
 			break;
 		default:
@@ -217,12 +217,12 @@ namespace JsonStthm
 
 	void JsonValue::SetString(const char* pString)
 	{
-		StthmFree(m_pString);
+		JsonStthmFree(m_pString);
 		m_pString = NULL;
 		if (NULL != pString)
 		{
-			size_t iLen  = sizeof(char) * (1 + strlen(pString));
-			char* pNewString = (char*)StthmMalloc(iLen);
+			size_t iLen  = 1 + strlen(pString);
+			char* pNewString = (char*)JsonStthmMalloc(iLen);
 			memcpy(pNewString, pString, iLen);
 			m_pString = pNewString;
 		}
@@ -614,7 +614,7 @@ namespace JsonStthm
 				JsonValue* pNewMember = new JsonValue();
 
 				size_t iNameLen = strlen(pName) + 1;
-				void* pNewString = StthmMalloc(iNameLen);
+				void* pNewString = JsonStthmMalloc(iNameLen);
 				memcpy(pNewString, (const void*)pName, iNameLen);
 				pNewMember->m_pName = (char*)pNewString;
 
@@ -1272,13 +1272,13 @@ namespace JsonStthm
 			long iSize = ftell(pFile);
 			fseek(pFile, 0, SEEK_SET);
 
-			char* pString = (char*)StthmMalloc(iSize);
+			char* pString = (char*)JsonStthmMalloc(iSize);
 			fread(pString, 1, iSize, pFile);
 			fclose(pFile);
 
 			int iLine = ReadString(pString);
 
-			StthmFree(pString);
+			JsonStthmFree(pString);
 			return iLine;
 		}
 		return -1;

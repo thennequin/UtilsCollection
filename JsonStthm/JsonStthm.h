@@ -41,7 +41,7 @@ namespace JsonStthm
 			~Buffer()
 			{
 				if (!m_bUseHeap)
-					StthmFree(m_pData);
+					JsonStthmFree(m_pData);
 			}
 
 			Buffer<T>& operator +=(const T& oValue)
@@ -73,11 +73,11 @@ namespace JsonStthm
 				{
 					if (!m_bUseHeap || iCapacity >= HeapSize || bForceAlloc)
 					{
-						T* pTemp = (T*)StthmMalloc(iCapacity * sizeof(T));
+						T* pTemp = (T*)JsonStthmMalloc(iCapacity * sizeof(T));
 						JsonStthmAssert(pTemp != NULL);
 						memcpy(pTemp, m_pData, m_iSize * sizeof(T));
 						if (!m_bUseHeap)
-							StthmFree(m_pData);
+							JsonStthmFree(m_pData);
 						m_pData = pTemp;
 						m_bUseHeap = false;
 					}
@@ -103,7 +103,7 @@ namespace JsonStthm
 				char* pTemp;
 				if (m_bUseHeap)
 				{
-					pTemp = (T*)StthmMalloc(m_iSize * sizeof(T));
+					pTemp = (T*)JsonStthmMalloc(m_iSize * sizeof(T));
 					memcpy(pTemp, m_pHeapData, m_iSize * sizeof(T));
 				}
 				else
