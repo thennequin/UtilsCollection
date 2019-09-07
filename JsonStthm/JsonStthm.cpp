@@ -811,26 +811,6 @@ namespace JsonStthm
 		return *this;
 	}
 
-	JsonValue::operator const char*() const
-	{
-		return ToString();
-	}
-
-	JsonValue::operator bool() const
-	{
-		return ToBoolean();
-	}
-
-	JsonValue::operator long() const
-	{
-		return ToInteger();
-	}
-
-	JsonValue::operator double() const
-	{
-		return ToFloat();
-	}
-
 	//Reading
 
 	bool JsonValue::IsSpace(char cChar) {
