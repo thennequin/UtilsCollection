@@ -869,6 +869,7 @@ namespace JsonStthm
 		else if (*pString == 'f') oTempBuffer += '\f';
 		else if (*pString == '"') oTempBuffer += '"';
 		else if (*pString == '\\') oTempBuffer += '\\';
+		else if (*pString == '\/') oTempBuffer += '\/';
 		else if (*pString == 'u')
 		{
 			int iChar = 0;
