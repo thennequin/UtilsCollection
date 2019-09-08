@@ -197,6 +197,7 @@ namespace JsonStthm
 		int					ReadString(const char* pJson);
 		int					ReadFile(const char* pFilename);
 
+		void				Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact);
 #ifdef STTHM_USE_STD_STRING
 		void				WriteString(std::string& sOutJson, bool bCompact = false);
 #endif //STTHM_USE_STD_STRING
@@ -245,10 +246,7 @@ namespace JsonStthm
 		static JsonValue	CreateConst();
 		void				Reset();
 		void				SetString(const char* pString);
-
-		void				Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact);
-		static void			WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pBuffer);
-
+	protected:
 		bool				m_bConst;
 		EType				m_eType;
 		char*				m_pName;
@@ -276,6 +274,7 @@ namespace JsonStthm
 		static inline bool	ReadNumericValue(const char*& pString, JsonValue& oValue);
 		static inline bool	ReadObjectValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
 		static inline bool	ReadArrayValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
+		static void			WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pBuffer);
 	};
 }
 

@@ -282,6 +282,57 @@ namespace JsonStthm
 		}
 	}
 
+	int JsonValue::ReadString(const char* pJson)
+	{
+		if (pJson != NULL)
+		{
+			Internal::CharBuffer oTempBuffer;
+			Reset();
+			const char* pEnd = pJson;
+			if (!Parse(pEnd, oTempBuffer))
+			{
+				int iLine = 1;
+				int iReturn = 1;
+				while (pJson != pEnd)
+				{
+					if (*pJson == '\n')
+						++iLine;
+					else if (*pJson == '\r')
+						++iReturn;
+					++pJson;
+				}
+				if (iReturn > iLine)
+					iLine = iReturn;
+				return iLine;
+			}
+			return 0;
+		}
+		return -1;
+	}
+
+	int JsonValue::ReadFile(const char* pFilename)
+	{
+		FILE* pFile = fopen(pFilename, "r");
+		if (NULL != pFile)
+		{
+			Reset();
+
+			fseek(pFile, 0, SEEK_END);
+			long iSize = ftell(pFile);
+			fseek(pFile, 0, SEEK_SET);
+
+			char* pString = (char*)JsonStthmMalloc(iSize);
+			fread(pString, 1, iSize, pFile);
+			fclose(pFile);
+
+			int iLine = ReadString(pString);
+
+			JsonStthmFree(pString);
+			return iLine;
+		}
+		return -1;
+	}
+
 	void JsonValue::Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact)
 	{
 		if (m_eType == E_TYPE_OBJECT)
@@ -407,106 +458,6 @@ namespace JsonStthm
 		else
 		{
 			sOutJson.PushRange("null", 4);
-		}
-	}
-
-	void JsonValue::WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pInput)
-	{
-		while (*pInput != '\0')
-		{
-			char cChar = *pInput;
-			if (cChar == '\n')
-			{
-				sOutJson.PushRange("\\n", 2);
-			}
-			else if (cChar == '\r')
-			{
-				sOutJson.PushRange("\\r", 2);
-			}
-			else if (cChar == '\t')
-			{
-				sOutJson.PushRange("\\t", 2);
-			}
-			else if (cChar == '\b')
-			{
-				sOutJson.PushRange("\\b", 2);
-			}
-			else if (cChar == '\f')
-			{
-				sOutJson.PushRange("\\f", 2);
-			}
-			else if (cChar == '"')
-			{
-				sOutJson.PushRange("\\\"", 2);
-			}
-			else if (cChar == '\\')
-			{
-				sOutJson.PushRange("\\\\", 2);
-			}
-			else if ((unsigned char)cChar < 0x80)
-			{
-				sOutJson += cChar;
-			}
-			else
-			{
-				uint32_t iChar = (unsigned char)cChar;
-				if ((iChar & 0xE0) == 0xC0) // 2 byte
-				{
-					iChar = ((((unsigned char)pInput[0]) & 0x1F) <<  6)
-						+	((((unsigned char)pInput[1]) & 0x3F) <<  0);
-					pInput += 1;
-				}
-				else if ((iChar & 0xF0) == 0xE0) // 3 bytes
-				{
-					iChar = ((((unsigned char)pInput[0]) & 0x0F) << 12)
-						+	((((unsigned char)pInput[1]) & 0x3F) <<  6)
-						+	((((unsigned char)pInput[2]) & 0x3F) <<  0);
-					pInput += 2;
-				}
-				else if ((iChar & 0xF8) == 0xF0 && iChar <= 0xF4) // 4 bytes
-				{
-					iChar = ((((unsigned char)pInput[0]) & 0x07) << 18)
-						+	((((unsigned char)pInput[1]) & 0x3F) << 12)
-						+	((((unsigned char)pInput[2]) & 0x3F) <<  6)
-						+	((((unsigned char)pInput[3]) & 0x3F) <<  0);
-					pInput += 3;
-				}
-				else
-				{
-					//Invalid char
-					iChar = -1;
-				}
-
-				const char* const pHexa = "0123456789abcdef";
-
-				if (iChar < 0xFFFF)
-				{
-					sOutJson.PushRange("\\u", 2);
-					sOutJson.Push(pHexa[(iChar >> 12) & 0x0f]);
-					sOutJson.Push(pHexa[(iChar >>  8) & 0x0f]);
-					sOutJson.Push(pHexa[(iChar >>  4) & 0x0f]);
-					sOutJson.Push(pHexa[(iChar >>  0) & 0x0f]);
-				}
-				else
-				{
-					//UTF-16 pair surrogate
-					uint32_t iCharBis = iChar - 0x10000;
-					uint32_t iW1 = 0xD800 | ((iCharBis >> 10) & 0x3FF);
-					uint32_t iW2 = 0xDC00 | (iCharBis & 0x3FF);
-					sOutJson.PushRange("\\u", 2);
-					sOutJson.Push(pHexa[(iW1 >> 12) & 0x0f]);
-					sOutJson.Push(pHexa[(iW1 >>  8) & 0x0f]);
-					sOutJson.Push(pHexa[(iW1 >>  4) & 0x0f]);
-					sOutJson.Push(pHexa[(iW1 >>  0) & 0x0f]);
-					sOutJson.PushRange("\\u", 2);
-					sOutJson.Push(pHexa[(iW2 >> 12) & 0x0f]);
-					sOutJson.Push(pHexa[(iW2 >>  8) & 0x0f]);
-					sOutJson.Push(pHexa[(iW2 >>  4) & 0x0f]);
-					sOutJson.Push(pHexa[(iW2 >>  0) & 0x0f]);
-				}
-			}
-
-			++pInput;
 		}
 	}
 
@@ -882,7 +833,88 @@ namespace JsonStthm
 		return *this;
 	}
 
-	//Reading
+	const bool JsonValue::Parse(const char*& pString, Internal::CharBuffer& oTempBuffer)
+	{
+		bool bOk = pString != NULL && *pString != 0;
+		while (*pString != 0 && bOk)
+		{
+			while (Internal::IsSpace(*pString)) ++pString;
+			if (*pString == '"')
+			{
+				++pString;
+				if (!ReadStringValue(pString, *this, oTempBuffer))
+					bOk = false;
+				break;
+			}
+			else if (memcmp(pString, "NaN", 3) == 0)
+			{
+				pString += 3;
+				*this = Internal::c_fNaN;
+				break;
+			}
+			else if (memcmp(pString, "-Infinity", 9) == 0)
+			{
+				pString += 9;
+				*this = -Internal::c_fInfinity;
+				break;
+			}
+			else if (memcmp(pString, "Infinity", 8) == 0)
+			{
+				pString += 8;
+				*this = Internal::c_fInfinity;
+				break;
+			}
+			else if (Internal::IsDigit(*pString) || *pString == '-')
+			{
+				if (!ReadNumericValue(pString, *this))
+					bOk = false;
+				break;
+			}
+			else if (memcmp(pString, "true", 4) == 0)
+			{
+				pString += 4;
+				*this = true;
+				break;
+			}
+			else if (memcmp(pString, "false", 5) == 0)
+			{
+				pString += 5;
+				*this = false;
+				break;
+			}
+			else if (memcmp(pString, "null", 4) == 0)
+			{
+				pString += 4;
+				InitType(E_TYPE_INVALID);
+				break;
+			}
+			else if (*pString == '{')
+			{
+				++pString;
+				if (!ReadObjectValue(pString, *this, oTempBuffer))
+				{
+					bOk = false;
+				}
+				break;
+			}
+			else if (*pString == '[')
+			{
+				++pString;
+				if (!ReadArrayValue(pString, *this, oTempBuffer))
+					bOk = false;
+				break;
+			}
+			else
+			{
+				//Error
+				bOk = false;
+				break;
+			}
+		}
+		return bOk;
+	}
+
+	// Static functions
 
 	bool JsonValue::ReadSpecialChar(const char*& pString, Internal::CharBuffer& oTempBuffer)
 	{
@@ -1199,135 +1231,108 @@ namespace JsonStthm
 		return false;
 	}
 
-	int JsonValue::ReadString(const char* pJson)
+	void JsonValue::WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pInput)
 	{
-		if (pJson != NULL)
+		while (*pInput != '\0')
 		{
-			Internal::CharBuffer oTempBuffer;
-			Reset();
-			const char* pEnd = pJson;
-			if (!Parse(pEnd, oTempBuffer))
+			char cChar = *pInput;
+			if (cChar == '\n')
 			{
-				int iLine = 1;
-				int iReturn = 1;
-				while (pJson != pEnd)
-				{
-					if (*pJson == '\n')
-						++iLine;
-					else if (*pJson == '\r')
-						++iReturn;
-					++pJson;
-				}
-				if (iReturn > iLine)
-					iLine = iReturn;
-				return iLine;
+				sOutJson.PushRange("\\n", 2);
 			}
-			return 0;
-		}
-		return -1;
-	}
-
-	const bool JsonValue::Parse(const char*& pString, Internal::CharBuffer& oTempBuffer)
-	{
-		bool bOk = pString != NULL && *pString != 0;
-		while (*pString != 0 && bOk)
-		{
-			while (Internal::IsSpace(*pString)) ++pString;
-			if (*pString == '"')
+			else if (cChar == '\r')
 			{
-				++pString;
-				if (!ReadStringValue(pString, *this, oTempBuffer))
-					bOk = false;
-				break;
+				sOutJson.PushRange("\\r", 2);
 			}
-			else if (memcmp(pString, "NaN", 3) == 0 )
+			else if (cChar == '\t')
 			{
-				pString += 3;
-				*this = Internal::c_fNaN;
-				break;
+				sOutJson.PushRange("\\t", 2);
 			}
-			else if (memcmp(pString, "-Infinity", 9) == 0 )
+			else if (cChar == '\b')
 			{
-				pString += 9;
-				*this = -Internal::c_fInfinity;
-				break;
+				sOutJson.PushRange("\\b", 2);
 			}
-			else if (memcmp(pString, "Infinity", 8) == 0 )
+			else if (cChar == '\f')
 			{
-				pString += 8;
-				*this = Internal::c_fInfinity;
-				break;
+				sOutJson.PushRange("\\f", 2);
 			}
-			else if (Internal::IsDigit(*pString) || *pString == '-')
+			else if (cChar == '"')
 			{
-				if (!ReadNumericValue(pString, *this))
-					bOk = false;
-				break;
+				sOutJson.PushRange("\\\"", 2);
 			}
-			else if (memcmp(pString, "true", 4) == 0 )
+			else if (cChar == '\\')
 			{
-				pString += 4;
-				*this = true;
-				break;
+				sOutJson.PushRange("\\\\", 2);
 			}
-			else if (memcmp(pString, "false", 5) == 0 )
+			else if ((unsigned char)cChar < 0x80)
 			{
-				pString += 5;
-				*this = false;
-				break;
-			}
-			else if (memcmp(pString, "null", 4) == 0 )
-			{
-				pString += 4;
-				InitType(E_TYPE_INVALID);
-				break;
-			}
-			else if (*pString == '{')
-			{
-				++pString;
-				if (!ReadObjectValue(pString, *this, oTempBuffer))
-				{
-					bOk = false;
-				}
-				break;
-			}
-			else if (*pString == '[')
-			{
-				++pString;
-				if (!ReadArrayValue(pString, *this, oTempBuffer))
-					bOk = false;
-				break;
+				sOutJson += cChar;
 			}
 			else
 			{
-				//Error
-				bOk = false;
-				break;
+				uint32_t iChar = (unsigned char)cChar;
+				if ((iChar & 0xE0) == 0xC0) // 2 byte
+				{
+					iChar = ((((unsigned char)pInput[0]) & 0x1F) << 6)
+						+ ((((unsigned char)pInput[1]) & 0x3F) << 0);
+					pInput += 1;
+				}
+				else if ((iChar & 0xF0) == 0xE0) // 3 bytes
+				{
+					iChar = ((((unsigned char)pInput[0]) & 0x0F) << 12)
+						+ ((((unsigned char)pInput[1]) & 0x3F) << 6)
+						+ ((((unsigned char)pInput[2]) & 0x3F) << 0);
+					pInput += 2;
+				}
+				else if ((iChar & 0xF8) == 0xF0 && iChar <= 0xF4) // 4 bytes
+				{
+					iChar = ((((unsigned char)pInput[0]) & 0x07) << 18)
+						+ ((((unsigned char)pInput[1]) & 0x3F) << 12)
+						+ ((((unsigned char)pInput[2]) & 0x3F) << 6)
+						+ ((((unsigned char)pInput[3]) & 0x3F) << 0);
+					pInput += 3;
+				}
+				else
+				{
+					//Invalid char
+					iChar = -1;
+				}
+
+				const char* const pHexa = "0123456789abcdef";
+
+				if (iChar < 0xFFFF)
+				{
+					sOutJson.PushRange("\\u", 2);
+					sOutJson.Push(pHexa[(iChar >> 12) & 0x0f]);
+					sOutJson.Push(pHexa[(iChar >> 8) & 0x0f]);
+					sOutJson.Push(pHexa[(iChar >> 4) & 0x0f]);
+					sOutJson.Push(pHexa[(iChar >> 0) & 0x0f]);
+				}
+				else
+				{
+					//UTF-16 pair surrogate
+					uint32_t iCharBis = iChar - 0x10000;
+					uint32_t iW1 = 0xD800 | ((iCharBis >> 10) & 0x3FF);
+					uint32_t iW2 = 0xDC00 | (iCharBis & 0x3FF);
+					sOutJson.PushRange("\\u", 2);
+					sOutJson.Push(pHexa[(iW1 >> 12) & 0x0f]);
+					sOutJson.Push(pHexa[(iW1 >> 8) & 0x0f]);
+					sOutJson.Push(pHexa[(iW1 >> 4) & 0x0f]);
+					sOutJson.Push(pHexa[(iW1 >> 0) & 0x0f]);
+					sOutJson.PushRange("\\u", 2);
+					sOutJson.Push(pHexa[(iW2 >> 12) & 0x0f]);
+					sOutJson.Push(pHexa[(iW2 >> 8) & 0x0f]);
+					sOutJson.Push(pHexa[(iW2 >> 4) & 0x0f]);
+					sOutJson.Push(pHexa[(iW2 >> 0) & 0x0f]);
+				}
 			}
+
+			++pInput;
 		}
-		return bOk;
 	}
 
-	int JsonValue::ReadFile(const char* pFilename)
+	JsonDoc::JsonDoc()
+		: m_oRoot(&m_oPool)
 	{
-		FILE* pFile = fopen(pFilename, "r");
-		if (NULL != pFile)
-		{
-			Reset();
-
-			fseek(pFile, 0, SEEK_END);
-			long iSize = ftell(pFile);
-			fseek(pFile, 0, SEEK_SET);
-
-			char* pString = (char*)JsonStthmMalloc(iSize);
-			fread(pString, 1, iSize, pFile);
-			fclose(pFile);
-
-			int iLine = ReadString(pString);
-
-			JsonStthmFree(pString);
-			return iLine;
-		}
-		return -1;
 	}
 }
