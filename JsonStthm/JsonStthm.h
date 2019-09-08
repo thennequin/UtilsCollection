@@ -192,6 +192,7 @@ namespace JsonStthm
 							~JsonValue();
 
 		void				InitType(EType eType);
+		void				Reset();
 		EType				GetType() const;
 
 		int					ReadString(const char* pJson);
@@ -203,25 +204,30 @@ namespace JsonStthm
 #endif //STTHM_USE_STD_STRING
 		bool				WriteFile(const char* pFilename, bool bCompact = false);
 
+		int					GetMemberCount() const;
+
+		const char*			GetName() const { return m_pName; }
+
 		bool				IsNull() const { return m_eType == E_TYPE_INVALID; }
 		bool				IsObject() const { return m_eType == E_TYPE_OBJECT; }
 		bool				IsArray() const { return m_eType == E_TYPE_ARRAY; }
-		bool				IsBoolean() const { return m_eType == E_TYPE_BOOLEAN; }
 		bool				IsString() const { return m_eType == E_TYPE_STRING; }
+		bool				IsBoolean() const { return m_eType == E_TYPE_BOOLEAN; }
 		bool				IsInteger() const { return m_eType == E_TYPE_INTEGER; }
 		bool				IsFloat() const { return m_eType == E_TYPE_FLOAT; }
 
 		bool				IsNumeric() const { return m_eType == E_TYPE_INTEGER || m_eType == E_TYPE_FLOAT; }
 		bool				IsContainer() const { return m_eType == E_TYPE_ARRAY || m_eType == E_TYPE_OBJECT; }
 
-		int					GetMemberCount() const;
-
-		const char*			GetName() const { return m_pName; }
-
 		const char*			ToString() const;
 		bool				ToBoolean() const;
 		int64_t				ToInteger() const;
 		double				ToFloat() const;
+
+		void				SetString(const char* pValue);
+		void				SetBoolean(bool bValue);
+		void				SetInteger(int64_t iValue);
+		void				SetFloat(double fValue);
 
 		bool				operator ==(const JsonValue& oRight) const;
 		bool				operator !=(const JsonValue& oRight) const;
@@ -247,6 +253,8 @@ namespace JsonStthm
 		void				Reset();
 		void				SetString(const char* pString);
 	protected:
+		void				SetStringValue(const char* pString);
+
 		bool				m_bConst;
 		EType				m_eType;
 		char*				m_pName;
@@ -267,6 +275,8 @@ namespace JsonStthm
 		};
 
 		const bool			Parse(const char*& pString, Internal::CharBuffer& oTempBuffer);
+
+		static JsonValue	CreateConst();
 
 		static inline bool	ReadSpecialChar(const char*& pString, Internal::CharBuffer& oTempBuffer);
 		static inline bool	ReadStringValue(const char*& pString, Internal::CharBuffer& oTempBuffer);

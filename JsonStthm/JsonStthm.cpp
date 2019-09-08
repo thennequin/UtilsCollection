@@ -206,13 +206,6 @@ namespace JsonStthm
 		Reset();
 	}
 
-	JsonValue JsonValue::CreateConst()
-	{
-		JsonValue oValue;
-		oValue.m_bConst = true;
-		return oValue;
-	}
-
 	void JsonValue::InitType(EType eType)
 	{
 		if (m_eType != eType)
@@ -234,11 +227,6 @@ namespace JsonStthm
 				break;
 			}
 		}
-	}
-
-	JsonValue::EType JsonValue::GetType() const
-	{
-		return m_eType;
 	}
 
 	void JsonValue::Reset()
@@ -269,8 +257,14 @@ namespace JsonStthm
 		m_eType = E_TYPE_INVALID;
 	}
 
-	void JsonValue::SetString(const char* pString)
+	JsonValue::EType JsonValue::GetType() const
 	{
+		return m_eType;
+	}
+
+	void JsonValue::SetStringValue(const char* pString)
+	{
+		JsonStthmAssert(IsString());
 		JsonStthmFree(m_pString);
 		m_pString = NULL;
 		if (NULL != pString)
@@ -533,6 +527,53 @@ namespace JsonStthm
 		return 0.0;
 	}
 
+	void JsonValue::SetString(const char* pValue)
+	{
+		JsonStthmAssert(m_bConst == false);
+		if (m_bConst == false)
+		{
+			if (NULL != pValue)
+			{
+				InitType(E_TYPE_STRING);
+				SetStringValue(pValue);
+			}
+			else
+			{
+				InitType(E_TYPE_INVALID);
+			}
+		}
+	}
+
+	void JsonValue::SetBoolean(bool bValue)
+	{
+		JsonStthmAssert(m_bConst == false);
+		if (m_bConst == false)
+		{
+			InitType(E_TYPE_BOOLEAN);
+			m_bBoolean = bValue;
+		}
+	}
+
+	void JsonValue::SetInteger(int64_t iValue)
+	{
+		JsonStthmAssert(m_bConst == false);
+		if (m_bConst == false)
+		{
+			InitType(E_TYPE_INTEGER);
+			m_iInteger = iValue;
+		}
+	}
+
+	void JsonValue::SetFloat(double fValue)
+	{
+		JsonStthmAssert(m_bConst == false);
+		if (m_bConst == false)
+		{
+			InitType(E_TYPE_FLOAT);
+			m_fFloat = fValue;
+		}
+	}
+
 	bool JsonValue::operator ==(const JsonValue& oRight) const
 	{
 		if (m_eType != oRight.m_eType)
@@ -749,7 +790,7 @@ namespace JsonStthm
 		if (!m_bConst)
 		{
 			InitType(E_TYPE_STRING);
-			SetString(sValue.c_str());
+			SetStringValue(sValue.c_str());
 		}
 		return *this;
 	}
@@ -757,48 +798,25 @@ namespace JsonStthm
 
 	JsonValue& JsonValue::operator =(const char* pValue)
 	{
-		if (!m_bConst)
-		{
-			if (NULL != pValue)
-			{
-				InitType(E_TYPE_STRING);
-				SetString(pValue);
-			}
-			else
-			{
-				InitType(E_TYPE_INVALID);
-			}
-		}
+		SetString(pValue);
 		return *this;
 	}
 
 	JsonValue& JsonValue::operator =(bool bValue)
 	{
-		if (!m_bConst)
-		{
-			InitType(E_TYPE_BOOLEAN);
-			m_bBoolean = bValue;
-		}
+		SetBoolean(bValue);
 		return *this;
 	}
 
 	JsonValue& JsonValue::operator =(int64_t iValue)
 	{
-		if (!m_bConst)
-		{
-			InitType(E_TYPE_INTEGER);
-			m_iInteger = iValue;
-		}
+		SetInteger(iValue);
 		return *this;
 	}
 
 	JsonValue& JsonValue::operator =(double fValue)
 	{
-		if (!m_bConst)
-		{
-			InitType(E_TYPE_FLOAT);
-			m_fFloat = fValue;
-		}
+		SetFloat(fValue);
 		return *this;
 	}
 
@@ -827,7 +845,7 @@ namespace JsonStthm
 				oNewStr.PushRange(m_pString, iLen1);
 				oNewStr.PushRange(pAddString, iLen2);
 				oNewStr.Push(0);
-				SetString(oNewStr.Data());
+				SetStringValue(oNewStr.Data());
 			}
 		}
 		return *this;
@@ -915,6 +933,13 @@ namespace JsonStthm
 	}
 
 	// Static functions
+
+	JsonValue JsonValue::CreateConst()
+	{
+		JsonValue oValue;
+		oValue.m_bConst = true;
+		return oValue;
+	}
 
 	bool JsonValue::ReadSpecialChar(const char*& pString, Internal::CharBuffer& oTempBuffer)
 	{
