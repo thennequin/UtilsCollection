@@ -23,6 +23,8 @@ namespace JsonStthm
 		bool							IsXDigit(char cChar);
 		int								CharToInt(char cChar);
 		void							SkipSpaces(const char*& pString);
+		int64_t							StrToInt64(const char* pString, char** pEnd);
+
 		template <typename T, size_t HeapSize = 1024>
 		struct Buffer
 		{

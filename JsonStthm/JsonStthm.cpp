@@ -62,6 +62,25 @@ namespace JsonStthm
 		{
 			while (IsSpace(*pString)) ++pString;
 		}
+
+		int64_t StrToInt64(const char* pString, char** pEnd)
+		{
+			bool bNeg = false;
+			if (*pString == '-')
+			{
+				++pString;
+				bNeg = true;
+			}
+
+			int64_t lValue = 0;
+			while (IsDigit(*pString))
+				lValue = lValue * 10 + (*pString++ & 0xF);
+
+			if (pEnd != NULL)
+				*pEnd = (char*)pString;
+
+			return bNeg ? -lValue : lValue;
+		}
 	}
 
 	//////////////////////////////
@@ -1051,7 +1070,7 @@ namespace JsonStthm
 		char* pEndDouble;
 		char* pEndLong;
 		double fValue = strtod( pString, &pEndDouble );
-		long long iValue = strtoll( pString, &pEndLong, 10 );
+		long long iValue = Internal::StrToInt64( pString, &pEndLong );
 		if( pEndDouble > pEndLong )
 		{
 			pString = pEndDouble;
