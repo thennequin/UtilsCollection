@@ -15,6 +15,14 @@ namespace JsonStthm
 {
 	namespace Internal
 	{
+		bool							IsNaN(double x);
+		bool							IsInfinite(double x);
+
+		bool							IsSpace(char cChar);
+		bool							IsDigit(char cChar);
+		bool							IsXDigit(char cChar);
+		int								CharToInt(char cChar);
+		void							SkipSpaces(const char*& pString);
 		template <typename T, size_t HeapSize = 1024>
 		struct Buffer
 		{
@@ -258,13 +266,8 @@ namespace JsonStthm
 			double			m_fFloat;
 		};
 
-		const bool Parse(const char*& pString, Internal::CharBuffer& oTempBuffer);
+		const bool			Parse(const char*& pString, Internal::CharBuffer& oTempBuffer);
 
-		static inline bool	IsSpace(char cChar);
-		static inline bool	IsDigit(char cChar);
-		static inline bool	IsXDigit(char cChar);
-		static inline int	CharToInt(char cChar);
-		static inline void	SkipSpaces(const char*& pString);
 		static inline bool	ReadSpecialChar(const char*& pString, Internal::CharBuffer& oTempBuffer);
 		static inline bool	ReadStringValue(const char*& pString, Internal::CharBuffer& oTempBuffer);
 		static inline bool	ReadStringValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);

@@ -35,6 +35,33 @@ namespace JsonStthm
 			return memcmp(&c_fInfinity, &x, sizeof(double)) == 0
 				|| memcmp(&c_fNegativeInfinity, &x, sizeof(double)) == 0;
 		}
+
+		bool IsSpace(char cChar) {
+			return cChar == ' ' || (cChar >= '\t' && cChar <= '\r');
+		}
+
+		bool IsDigit(char cChar)
+		{
+			return (cChar >= '0' && cChar <= '9');
+		}
+
+		bool IsXDigit(char cChar)
+		{
+			return (cChar >= '0' && cChar <= '9') || ((cChar & ~' ') >= 'A' && (cChar & ~' ') <= 'F') || ((cChar & ~' ') >= 'a' && (cChar & ~' ') <= 'f');
+		}
+
+		int	CharToInt(char cChar)
+		{
+			if (cChar <= '9')
+				return cChar - '0';
+			else
+				return (cChar & ~' ') - 'A' + 10;
+		}
+
+		void SkipSpaces(const char*& pString)
+		{
+			while (IsSpace(*pString)) ++pString;
+		}
 	}
 
 	//////////////////////////////
@@ -838,33 +865,6 @@ namespace JsonStthm
 
 	//Reading
 
-	bool JsonValue::IsSpace(char cChar) {
-		return cChar == ' ' || (cChar >= '\t' && cChar <= '\r');
-	}
-
-	bool JsonValue::IsDigit(char cChar)
-	{
-		return (cChar >= '0' && cChar <= '9');
-	}
-
-	bool JsonValue::IsXDigit(char cChar)
-	{
-		return (cChar >= '0' && cChar <= '9') || ((cChar & ~' ') >= 'A' && (cChar & ~' ') <= 'F') || ((cChar & ~' ') >= 'a' && (cChar & ~' ') <= 'f');
-	}
-
-	int	JsonValue::CharToInt(char cChar)
-	{
-		if (cChar <= '9')
-			return cChar - '0';
-		else
-			return (cChar & ~' ') - 'A' + 10;
-	}
-
-	void JsonValue::SkipSpaces(const char*& pString)
-	{
-		while (IsSpace(*pString)) ++pString;
-	}
-
 	bool JsonValue::ReadSpecialChar(const char*& pString, Internal::CharBuffer& oTempBuffer)
 	{
 		if (*pString == 'n') oTempBuffer += '\n';
@@ -880,8 +880,8 @@ namespace JsonStthm
 			uint32_t iChar = 0;
 			for (int i = 0; i < 4; ++i)
 			{
-				if (IsXDigit(*++pString))
-					iChar = iChar * 16 + CharToInt((unsigned char)*pString);
+				if (Internal::IsXDigit(*++pString))
+					iChar = iChar * 16 + Internal::CharToInt((unsigned char)*pString);
 				else
 					return false;
 			}
@@ -897,8 +897,8 @@ namespace JsonStthm
 				uint32_t iChar2 = 0;
 				for (int i = 0; i < 4; ++i)
 				{
-					if (IsXDigit(*++pString))
-						iChar2 = iChar2 * 16 + CharToInt((unsigned char)*pString);
+					if (Internal::IsXDigit(*++pString))
+						iChar2 = iChar2 * 16 + Internal::CharToInt((unsigned char)*pString);
 					else
 						return false;
 				}
@@ -1071,7 +1071,7 @@ namespace JsonStthm
 	{
 		oValue.InitType(JsonValue::E_TYPE_OBJECT);
 
-		SkipSpaces( pString );
+		Internal::SkipSpaces( pString );
 
 		if( *pString == '}' )
 		{
@@ -1081,7 +1081,7 @@ namespace JsonStthm
 
 		while (*pString != 0)
 		{
-			SkipSpaces(pString);
+			Internal::SkipSpaces(pString);
 
 			// Read member name
 			if (*pString != '"' || !ReadStringValue(++pString, oTempBuffer))
@@ -1090,14 +1090,14 @@ namespace JsonStthm
 			JsonValue* pNewMember = new JsonValue();
 			pNewMember->m_pName = oTempBuffer.Take();
 
-			SkipSpaces(pString);
+			Internal::SkipSpaces(pString);
 
 			if (*pString != ':')
 				return false;
 
 			++pString;
 
-			SkipSpaces(pString);
+			Internal::SkipSpaces(pString);
 
 			if (!pNewMember->Parse(pString, oTempBuffer))
 			{
@@ -1115,7 +1115,7 @@ namespace JsonStthm
 			}
 			oValue.m_oChilds.m_pLast = pNewMember;
 
-			SkipSpaces(pString);
+			Internal::SkipSpaces(pString);
 
 			if (*pString == '}')
 			{
@@ -1135,7 +1135,7 @@ namespace JsonStthm
 	{
 		oValue.InitType(JsonValue::E_TYPE_ARRAY);
 
-		SkipSpaces( pString );
+		Internal::SkipSpaces( pString );
 		if( *pString == ']' )
 		{
 			++pString;
@@ -1144,7 +1144,7 @@ namespace JsonStthm
 
 		while (*pString != 0)
 		{
-			SkipSpaces(pString);
+			Internal::SkipSpaces(pString);
 
 			JsonValue* pNewValue = new JsonValue();
 
@@ -1164,7 +1164,7 @@ namespace JsonStthm
 			}
 			oValue.m_oChilds.m_pLast = pNewValue;
 
-			SkipSpaces(pString);
+			Internal::SkipSpaces(pString);
 
 			if (*pString == ']')
 			{
@@ -1213,7 +1213,7 @@ namespace JsonStthm
 		bool bOk = pString != NULL && *pString != 0;
 		while (*pString != 0 && bOk)
 		{
-			while (IsSpace(*pString)) ++pString;
+			while (Internal::IsSpace(*pString)) ++pString;
 			if (*pString == '"')
 			{
 				++pString;
@@ -1239,7 +1239,7 @@ namespace JsonStthm
 				*this = Internal::c_fInfinity;
 				break;
 			}
-			else if (IsDigit(*pString) || *pString == '-')
+			else if (Internal::IsDigit(*pString) || *pString == '-')
 			{
 				if (!ReadNumericValue(pString, *this))
 					bOk = false;
