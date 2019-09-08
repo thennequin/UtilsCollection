@@ -403,27 +403,26 @@ namespace JsonStthm
 			}
 			else
 			{
-				sOutJson.PushRange("\\u", 2);
-				unsigned int iChar = (unsigned char)cChar;
+				uint32_t iChar = (unsigned char)cChar;
 				if ((iChar & 0xE0) == 0xC0) // 2 byte
 				{
-					iChar = ((((unsigned char)pInput[0]) & 0x1F) << 6)
-						+	((((unsigned char)pInput[1]) & 0x3F));
+					iChar = ((((unsigned char)pInput[0]) & 0x1F) <<  6)
+						+	((((unsigned char)pInput[1]) & 0x3F) <<  0);
 					pInput += 1;
 				}
 				else if ((iChar & 0xF0) == 0xE0) // 3 bytes
 				{
-					iChar = ((((unsigned char)pInput[0]) & 0x0F) << 12) 
-						+	((((unsigned char)pInput[1]) & 0x3F) << 6) 
-						+	((((unsigned char)pInput[2]) & 0x3F));
+					iChar = ((((unsigned char)pInput[0]) & 0x0F) << 12)
+						+	((((unsigned char)pInput[1]) & 0x3F) <<  6)
+						+	((((unsigned char)pInput[2]) & 0x3F) <<  0);
 					pInput += 2;
 				}
 				else if ((iChar & 0xF8) == 0xF0 && iChar <= 0xF4) // 4 bytes
 				{
 					iChar = ((((unsigned char)pInput[0]) & 0x07) << 18)
 						+	((((unsigned char)pInput[1]) & 0x3F) << 12)
-						+	((((unsigned char)pInput[2]) & 0x3F) << 6)
-						+	((((unsigned char)pInput[3]) & 0x3F));
+						+	((((unsigned char)pInput[2]) & 0x3F) <<  6)
+						+	((((unsigned char)pInput[3]) & 0x3F) <<  0);
 					pInput += 3;
 				}
 				else
@@ -432,15 +431,33 @@ namespace JsonStthm
 					iChar = -1;
 				}
 
-				char sHexa[5];
-				const char* const  pHexa = "0123456789ABCDEF";
-				sHexa[0] = pHexa[(iChar >> 12) & 0x0f];
-				sHexa[1] = pHexa[(iChar >> 8) & 0x0f];
-				sHexa[2] = pHexa[(iChar >> 4) & 0x0f];
-				sHexa[3] = pHexa[(iChar) & 0x0f];
-				sHexa[4] = '\0';
+				const char* const pHexa = "0123456789abcdef";
 
-				sOutJson.PushRange(sHexa, 4);
+				if (iChar < 0xFFFF)
+				{
+					sOutJson.PushRange("\\u", 2);
+					sOutJson.Push(pHexa[(iChar >> 12) & 0x0f]);
+					sOutJson.Push(pHexa[(iChar >>  8) & 0x0f]);
+					sOutJson.Push(pHexa[(iChar >>  4) & 0x0f]);
+					sOutJson.Push(pHexa[(iChar >>  0) & 0x0f]);
+				}
+				else
+				{
+					//UTF-16 pair surrogate
+					uint32_t iCharBis = iChar - 0x10000;
+					uint32_t iW1 = 0xD800 | ((iCharBis >> 10) & 0x3FF);
+					uint32_t iW2 = 0xDC00 | (iCharBis & 0x3FF);
+					sOutJson.PushRange("\\u", 2);
+					sOutJson.Push(pHexa[(iW1 >> 12) & 0x0f]);
+					sOutJson.Push(pHexa[(iW1 >>  8) & 0x0f]);
+					sOutJson.Push(pHexa[(iW1 >>  4) & 0x0f]);
+					sOutJson.Push(pHexa[(iW1 >>  0) & 0x0f]);
+					sOutJson.PushRange("\\u", 2);
+					sOutJson.Push(pHexa[(iW2 >> 12) & 0x0f]);
+					sOutJson.Push(pHexa[(iW2 >>  8) & 0x0f]);
+					sOutJson.Push(pHexa[(iW2 >>  4) & 0x0f]);
+					sOutJson.Push(pHexa[(iW2 >>  0) & 0x0f]);
+				}
 			}
 
 			++pInput;
@@ -857,10 +874,10 @@ namespace JsonStthm
 		else if (*pString == 'f') oTempBuffer += '\f';
 		else if (*pString == '"') oTempBuffer += '"';
 		else if (*pString == '\\') oTempBuffer += '\\';
-		else if (*pString == '\/') oTempBuffer += '\/';
+		else if (*pString == '/') oTempBuffer += '/';
 		else if (*pString == 'u')
 		{
-			int iChar = 0;
+			uint32_t iChar = 0;
 			for (int i = 0; i < 4; ++i)
 			{
 				if (IsXDigit(*++pString))
@@ -868,27 +885,51 @@ namespace JsonStthm
 				else
 					return false;
 			}
-			if (iChar < 0x0080)
+
+			if (iChar >= 0xD800 && iChar <= 0xDFFF) // UTF16 Surrogate pair
+			{
+				if ((iChar & 0xFC00) != 0xD800)
+					return false; //Invalid first pair code
+
+				if (*++pString != '\\' || *++pString != 'u')
+					return false; //Not a valid pair
+
+				uint32_t iChar2 = 0;
+				for (int i = 0; i < 4; ++i)
+				{
+					if (IsXDigit(*++pString))
+						iChar2 = iChar2 * 16 + CharToInt((unsigned char)*pString);
+					else
+						return false;
+				}
+
+				if ((iChar2 & 0xFC00) != 0xDC00)
+					return false; //Invalid second pair code
+
+				iChar = 0x10000 + (((iChar & 0x3FF) << 10) | (iChar2 & 0x3FF));
+			}
+
+			if (iChar < 0x80)
 			{
 				oTempBuffer += (char)iChar;
 			}
-			else if (iChar >= 0x80 && iChar < 0x800)
+			else if (iChar >= 0x80 && iChar <= 0x7FF)
 			{
-				oTempBuffer += (char)(0xC0 | (iChar >> 6));
-				oTempBuffer += (char)(0x80 | (iChar & 0x3F));
+				oTempBuffer += (char)(0xC0 | ((iChar >>  6)));
+				oTempBuffer += (char)(0x80 | ((iChar >>  0 ) & 0x3F));
 			}
-			else if (iChar >= 0x800 && iChar < 0x7FFF)
+			else if (iChar >= 0x800 && iChar <= 0xFFFF)
 			{
-				oTempBuffer += (char)(0xE0 | (iChar >> 12));
-				oTempBuffer += (char)(0x80 | ((iChar >> 6) & 0x3F));
-				oTempBuffer += (char)(0x80 | (iChar & 0x3F));
+				oTempBuffer += (char)(0xE0 | ((iChar >> 12)));
+				oTempBuffer += (char)(0x80 | ((iChar >>  6) & 0x3F));
+				oTempBuffer += (char)(0x80 | ((iChar >>  0) & 0x3F));
 			}
-			else if (iChar >= 0x8000 && iChar < 0x7FFFF)
+			else if (iChar >= 0x10000 && iChar <= 0x10FFFF)
 			{
-				oTempBuffer += (char)(0xF0 | (iChar >> 18));
-				oTempBuffer += (char)(0xE0 | ((iChar >> 12) & 0x3F));
-				oTempBuffer += (char)(0x80 | ((iChar >> 6) & 0x3F));
-				oTempBuffer += (char)(0x80 | (iChar & 0x3F));
+				oTempBuffer += (char)(0xF0 | ((iChar >> 18)));
+				oTempBuffer += (char)(0x80 | ((iChar >> 12) & 0x3F));
+				oTempBuffer += (char)(0x80 | ((iChar >>  6) & 0x3F));
+				oTempBuffer += (char)(0x80 | ((iChar >>  0) & 0x3F));
 			}
 			else
 			{
