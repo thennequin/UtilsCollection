@@ -248,10 +248,6 @@ namespace JsonStthm
 		JsonValue&			operator =(double fValue);
 
 		JsonValue&			operator +=(const JsonValue& oValue);
-
-		static JsonValue	CreateConst();
-		void				Reset();
-		void				SetString(const char* pString);
 	protected:
 		void				SetStringValue(const char* pString);
 
