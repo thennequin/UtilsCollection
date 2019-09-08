@@ -1355,9 +1355,4 @@ namespace JsonStthm
 			++pInput;
 		}
 	}
-
-	JsonDoc::JsonDoc()
-		: m_oRoot(&m_oPool)
-	{
-	}
 }
