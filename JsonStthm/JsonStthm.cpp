@@ -851,7 +851,7 @@ namespace JsonStthm
 		return *this;
 	}
 
-	const bool JsonValue::Parse(const char*& pString, Internal::CharBuffer& oTempBuffer)
+	bool JsonValue::Parse(const char*& pString, Internal::CharBuffer& oTempBuffer)
 	{
 		bool bOk = pString != NULL && *pString != 0;
 		while (*pString != 0 && bOk)

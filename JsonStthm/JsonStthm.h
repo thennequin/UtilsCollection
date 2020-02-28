@@ -270,7 +270,7 @@ namespace JsonStthm
 			double			m_fFloat;
 		};
 
-		const bool			Parse(const char*& pString, Internal::CharBuffer& oTempBuffer);
+		bool				Parse(const char*& pString, Internal::CharBuffer& oTempBuffer);
 
 		static JsonValue	CreateConst();
 
