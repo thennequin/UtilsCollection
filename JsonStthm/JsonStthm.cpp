@@ -592,6 +592,8 @@ namespace JsonStthm
 
 		switch (m_eType)
 		{
+		case E_TYPE_INVALID:
+			break;
 		case E_TYPE_OBJECT:
 		{
 			// We don't care if members order is not the same
