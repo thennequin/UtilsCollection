@@ -178,9 +178,9 @@ namespace JsonStthm
 							JsonValue();
 							JsonValue(const JsonValue& oSource);
 							JsonValue(bool bValue);
-#ifdef STTHM_STRING
-							JsonValue(const STTHM_STRING& sValue);
-#endif //STTHM_STRING
+#ifdef JsonStthmString
+							JsonValue(const JsonStthmString& sValue);
+#endif //JsonStthmString
 							JsonValue(const char* pValue);
 							JsonValue(int64_t iValue);
 							JsonValue(double fValue);
@@ -194,9 +194,9 @@ namespace JsonStthm
 		int					ReadFile(const char* pFilename);
 
 		void				Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact);
-#ifdef STTHM_STRING
-		void				WriteString(STTHM_STRING& sOutJson, bool bCompact = false);
-#endif //STTHM_STRING
+#ifdef JsonStthmString
+		void				WriteString(JsonStthmString& sOutJson, bool bCompact = false);
+#endif //JsonStthmString
 		char*				WriteString(bool bCompact);
 		bool				WriteFile(const char* pFilename, bool bCompact = false);
 
@@ -235,9 +235,9 @@ namespace JsonStthm
 		JsonValue&			operator [](int iIndex);
 
 		JsonValue&			operator =(const JsonValue& oValue);
-#ifdef STTHM_STRING
-		JsonValue&			operator =(const STTHM_STRING& sValue);
-#endif //STTHM_STRING
+#ifdef JsonStthmString
+		JsonValue&			operator =(const JsonStthmString& sValue);
+#endif //JsonStthmString
 		JsonValue&			operator =(const char* pValue);
 		JsonValue&			operator =(bool bValue);
 		JsonValue&			operator =(int64_t iValue);

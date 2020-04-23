@@ -160,8 +160,8 @@ namespace JsonStthm
 		*this = bValue;
 	}
 
-#ifdef STTHM_STRING
-	JsonValue::JsonValue(const STTHM_STRING& sValue)
+#ifdef JsonStthmString
+	JsonValue::JsonValue(const JsonStthmString& sValue)
 		: m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
@@ -169,7 +169,7 @@ namespace JsonStthm
 	{
 		*this = sValue;
 	}
-#endif //STTHM_STRING
+#endif //JsonStthmString
 
 	JsonValue::JsonValue(const char* pValue)
 		: m_bConst(false)
@@ -454,15 +454,15 @@ namespace JsonStthm
 		}
 	}
 
-#ifdef STTHM_STRING
-	void JsonValue::WriteString(STTHM_STRING& sOutJson, bool bCompact)
+#ifdef JsonStthmString
+	void JsonValue::WriteString(JsonStthmString& sOutJson, bool bCompact)
 	{
 		Internal::CharBuffer oBuffer;
 		Write(oBuffer, 0, bCompact);
 		sOutJson.resize(oBuffer.Size());
 		oBuffer.WriteTo((char*)sOutJson.data());
 	}
-#endif //STTHM_STRING
+#endif //JsonStthmString
 
 	char* JsonValue::WriteString(bool bCompact)
 	{
@@ -797,8 +797,8 @@ namespace JsonStthm
 		return *this;
 	}
 
-#ifdef STTHM_STRING
-	JsonValue& JsonValue::operator =(const STTHM_STRING& sValue)
+#ifdef JsonStthmString
+	JsonValue& JsonValue::operator =(const JsonStthmString& sValue)
 	{
 		if (!m_bConst)
 		{
@@ -807,7 +807,7 @@ namespace JsonStthm
 		}
 		return *this;
 	}
-#endif //STTHM_STRING
+#endif //JsonStthmString
 
 	JsonValue& JsonValue::operator =(const char* pValue)
 	{
