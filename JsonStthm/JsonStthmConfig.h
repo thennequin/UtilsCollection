@@ -20,7 +20,8 @@
 #define JsonStthmMalloc(iSize) malloc(iSize)
 #define JsonStthmFree(pObj) free(pObj)
 
-#define STTHM_USE_STD_STRING
+#define STTHM_STRING std::string
+#include <string>
 
 // End of configuration
 
