@@ -1333,7 +1333,8 @@ namespace JsonStthm
 				else
 				{
 					//Invalid char
-					iChar = -1;
+					JsonStthmAssert(false);
+					iChar = 0;
 				}
 
 				const char* const pHexa = "0123456789abcdef";
