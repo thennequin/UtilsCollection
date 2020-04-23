@@ -1,4 +1,3 @@
-
 #include "JsonStthm.h"
 
 #include <stdio.h> // FILE, fopen, fclose, fwrite, fread
@@ -464,6 +463,18 @@ namespace JsonStthm
 		oBuffer.WriteTo((char*)sOutJson.data());
 	}
 #endif //STTHM_USE_STD_STRING
+
+	char* JsonValue::WriteString(bool bCompact)
+	{
+		Internal::CharBuffer oBuffer;
+		Write(oBuffer, 0, bCompact);
+		char* pString = (char*)JsonStthmMalloc(oBuffer.Size() + 1);
+		if (pString != NULL)
+		{
+			oBuffer.WriteTo(pString);
+		}
+		return pString;
+	}
 
 	bool JsonValue::WriteFile(const char* pFilename, bool bCompact)
 	{

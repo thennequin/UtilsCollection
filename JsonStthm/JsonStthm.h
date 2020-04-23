@@ -1,4 +1,3 @@
-
 #ifndef __JSON_STTHM_H__
 #define __JSON_STTHM_H__
 
@@ -202,6 +201,7 @@ namespace JsonStthm
 #ifdef STTHM_USE_STD_STRING
 		void				WriteString(std::string& sOutJson, bool bCompact = false);
 #endif //STTHM_USE_STD_STRING
+		char*				WriteString(bool bCompact);
 		bool				WriteFile(const char* pFilename, bool bCompact = false);
 
 		int					GetMemberCount() const;
