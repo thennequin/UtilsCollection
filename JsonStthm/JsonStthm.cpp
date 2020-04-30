@@ -1140,7 +1140,7 @@ namespace JsonStthm
 		char* pEndDouble;
 		char* pEndLong;
 		double fValue = strtod( pString, &pEndDouble );
-		long long iValue = Internal::StrToInt64( pString, &pEndLong );
+		int64_t iValue = Internal::StrToInt64( pString, &pEndLong );
 		if( pEndDouble > pEndLong )
 		{
 			pString = pEndDouble;
