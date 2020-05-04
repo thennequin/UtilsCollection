@@ -760,14 +760,42 @@ namespace JsonStthm
 
 	JsonValue& JsonValue::operator =(const JsonValue& oValue)
 	{
-		if (oValue.m_eType == E_TYPE_OBJECT || oValue.m_eType == E_TYPE_ARRAY)
+		if (oValue.m_eType == E_TYPE_OBJECT)
 		{
-			InitType(oValue.m_eType);
+			InitType(E_TYPE_OBJECT);
 
 			JsonValue* pSourceChild = oValue.m_oChilds.m_pFirst;;
 			while (pSourceChild != NULL)
 			{
 				JsonValue* pNewChild = new JsonValue(*pSourceChild);
+
+				if (pSourceChild->m_pName != NULL)
+				{
+					size_t iNameLen = strlen(pSourceChild->m_pName) + 1;
+					char* pNewString = (char*)JsonStthmMalloc(iNameLen);
+					memcpy(pNewString, pSourceChild->m_pName, iNameLen);
+					pNewChild->m_pName = pNewString;
+				}
+
+				if (NULL != m_oChilds.m_pLast)
+					m_oChilds.m_pLast->m_pNext = pNewChild;
+				else
+					m_oChilds.m_pFirst = pNewChild;
+
+				m_oChilds.m_pLast = pNewChild;
+
+				pSourceChild = pSourceChild->m_pNext;
+			}
+		}
+		else if (oValue.m_eType == E_TYPE_ARRAY)
+		{
+			InitType(E_TYPE_ARRAY);
+
+			JsonValue* pSourceChild = oValue.m_oChilds.m_pFirst;;
+			while (pSourceChild != NULL)
+			{
+				JsonValue* pNewChild = new JsonValue(*pSourceChild);
+
 				if (NULL != m_oChilds.m_pLast)
 					m_oChilds.m_pLast->m_pNext = pNewChild;
 				else
