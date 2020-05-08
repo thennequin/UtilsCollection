@@ -46,7 +46,7 @@ namespace JsonStthm
 
 		bool IsXDigit(char cChar)
 		{
-			return (cChar >= '0' && cChar <= '9') || ((cChar & ~' ') >= 'A' && (cChar & ~' ') <= 'F') || ((cChar & ~' ') >= 'a' && (cChar & ~' ') <= 'f');
+			return (cChar >= '0' && cChar <= '9') || ((cChar & ~' ') >= 'A' && (cChar & ~' ') <= 'F');
 		}
 
 		int	CharToInt(char cChar)
