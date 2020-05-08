@@ -270,6 +270,7 @@ namespace JsonStthm
 		ValueUnion			m_oValue;
 
 		bool				Parse(const char*& pString, Internal::CharBuffer& oTempBuffer);
+		bool				ParseFast(const char*& pString, Internal::CharBuffer& oTempBuffer);
 
 		static JsonValue	CreateConst();
 
