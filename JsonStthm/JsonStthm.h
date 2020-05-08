@@ -8,18 +8,19 @@
 
 namespace JsonStthm
 {
+	class JsonValue;
+
+	struct Allocator
+	{
+		JsonValue*					(*CreateJsonValue)	(Allocator* pAllocator, void* pUserData);
+		void						(*DeleteJsonValue)	(JsonValue* pValue, void* pUserData);
+		char*						(*AllocString)		(size_t iSize, void* pUserData);
+		void						(*FreeString)		(char* pAlloc, void* pUserData);
+		void*						pUserData;
+	};
+
 	namespace Internal
 	{
-		bool							IsNaN(double x);
-		bool							IsInfinite(double x);
-
-		bool							IsSpace(char cChar);
-		bool							IsDigit(char cChar);
-		bool							IsXDigit(char cChar);
-		int								CharToInt(char cChar);
-		void							SkipSpaces(const char*& pString);
-		int64_t							StrToInt64(const char* pString, char** pEnd);
-
 		template <typename T, size_t HeapSize = 1024>
 		struct Buffer
 		{
@@ -104,10 +105,17 @@ namespace JsonStthm
 
 			const T* Data() const { return m_pData; }
 
-			T* Take()
+			T* Take(Allocator* pAllocator)
 			{
 				char* pTemp;
-				if (m_bUseHeap)
+				if (pAllocator != NULL)
+				{
+					pTemp = pAllocator->AllocString(m_iSize * sizeof(T), pAllocator->pUserData);
+					memcpy(pTemp, m_bUseHeap ? m_pHeapData : m_pData, m_iSize * sizeof(T));
+					m_iSize = 0;
+					return pTemp;
+				}
+				else if (m_bUseHeap)
 				{
 					pTemp = (T*)JsonStthmMalloc(m_iSize * sizeof(T));
 					memcpy(pTemp, m_pHeapData, m_iSize * sizeof(T));
@@ -174,6 +182,10 @@ namespace JsonStthm
 		};
 
 		static JsonValue	INVALID;
+
+		static void			ExplicitCtor(void* pMemory, Allocator* pAllocator);
+	protected:
+							JsonValue(Allocator* pAllocator);
 	public:
 							JsonValue();
 							JsonValue(const JsonValue& oSource);
@@ -247,6 +259,8 @@ namespace JsonStthm
 	protected:
 		void				SetStringValue(const char* pString);
 
+		Allocator*			m_pAllocator;
+
 		bool				m_bConst;
 		EType				m_eType;
 		char*				m_pName;
@@ -280,6 +294,12 @@ namespace JsonStthm
 		static inline bool	ReadObjectValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
 		static inline bool	ReadArrayValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
 		static void			WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pBuffer);
+
+		static JsonValue*	DefaultAllocatorCreateJsonValue(Allocator* pAllocator, void* pUserData);
+		static void			DefaultAllocatorDeleteJsonValue(JsonValue* pValue, void* pUserData);
+		static char*		DefaultAllocatorAllocString(size_t iSize, void* pUserData);
+		static void			DefaultAllocatorFreeString(char* pString, void* pUserData);
+		static Allocator	s_oDefaultAllocator;
 	};
 }
 

@@ -85,6 +85,7 @@ namespace JsonStthm
 	//////////////////////////////
 	// JsonValue::Iterator
 	//////////////////////////////
+
 	JsonValue::Iterator::Iterator(const JsonValue* pJson)
 	{
 		if (pJson != NULL && pJson->IsContainer())
@@ -131,10 +132,35 @@ namespace JsonStthm
 	//////////////////////////////
 	// JsonValue
 	//////////////////////////////
+
 	JsonValue JsonValue::INVALID = JsonValue::CreateConst();
 
+	inline void JsonValue::ExplicitCtor(void* pMemory, Allocator* pAllocator)
+	{
+		new (pMemory) JsonValue(pAllocator);
+	}
+
+	Allocator JsonValue::s_oDefaultAllocator = {
+		JsonValue::DefaultAllocatorCreateJsonValue,
+		JsonValue::DefaultAllocatorDeleteJsonValue,
+		JsonValue::DefaultAllocatorAllocString,
+		JsonValue::DefaultAllocatorFreeString,
+		NULL
+	};
+
+	JsonValue::JsonValue(Allocator* pAlloocator)
+		: m_pAllocator(pAlloocator)
+		, m_bConst(false)
+		, m_eType(E_TYPE_INVALID)
+		, m_pName(NULL)
+		, m_pNext(NULL)
+	{
+		JsonStthmAssert(m_pAllocator != NULL);
+	}
+
 	JsonValue::JsonValue()
-		: m_bConst(false)
+		: m_pAllocator(&s_oDefaultAllocator)
+		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -142,7 +168,8 @@ namespace JsonStthm
 	}
 
 	JsonValue::JsonValue(const JsonValue& oSource)
-		: m_bConst(false)
+		: m_pAllocator(&s_oDefaultAllocator)
+		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -152,7 +179,8 @@ namespace JsonStthm
 	}
 
 	JsonValue::JsonValue(bool bValue)
-		: m_bConst(false)
+		: m_pAllocator(&s_oDefaultAllocator)
+		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -162,7 +190,8 @@ namespace JsonStthm
 
 #ifdef JsonStthmString
 	JsonValue::JsonValue(const JsonStthmString& sValue)
-		: m_bConst(false)
+		: m_pAllocator(&s_oDefaultAllocator)
+		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -172,7 +201,8 @@ namespace JsonStthm
 #endif //JsonStthmString
 
 	JsonValue::JsonValue(const char* pValue)
-		: m_bConst(false)
+		: m_pAllocator(&s_oDefaultAllocator)
+		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -181,7 +211,8 @@ namespace JsonStthm
 	}
 
 	JsonValue::JsonValue(int64_t iValue)
-		: m_bConst(false)
+		: m_pAllocator(&s_oDefaultAllocator)
+		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -190,7 +221,8 @@ namespace JsonStthm
 	}
 
 	JsonValue::JsonValue(double fValue)
-		: m_bConst(false)
+		: m_pAllocator(&s_oDefaultAllocator)
+		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -200,7 +232,7 @@ namespace JsonStthm
 
 	JsonValue::~JsonValue()
 	{
-		JsonStthmFree(m_pName);
+		m_pAllocator->FreeString(m_pName, m_pAllocator->pUserData);
 		m_pName = NULL;
 		Reset();
 	}
@@ -239,7 +271,7 @@ namespace JsonStthm
 			while (pChild != NULL)
 			{
 				JsonValue* pTemp = pChild->m_pNext;
-				delete pChild;
+				m_pAllocator->DeleteJsonValue(pChild, m_pAllocator->pUserData);
 				pChild = pTemp;
 			}
 			m_oValue.Childs.m_pFirst = NULL;
@@ -247,7 +279,7 @@ namespace JsonStthm
 		}
 		break;
 		case E_TYPE_STRING:
-			JsonStthmFree(m_oValue.String);
+			m_pAllocator->FreeString(m_oValue.String, m_pAllocator->pUserData);
 			m_oValue.String = NULL;
 			break;
 		default:
@@ -264,12 +296,12 @@ namespace JsonStthm
 	void JsonValue::SetStringValue(const char* pString)
 	{
 		JsonStthmAssert(IsString());
-		JsonStthmFree(m_oValue.String);
+		m_pAllocator->FreeString(m_oValue.String, m_pAllocator->pUserData);
 		m_oValue.String = NULL;
 		if (NULL != pString)
 		{
 			size_t iLen  = 1 + strlen(pString);
-			char* pNewString = (char*)JsonStthmMalloc(iLen);
+			char* pNewString = m_pAllocator->AllocString(iLen, m_pAllocator->pUserData);
 			memcpy(pNewString, pString, iLen);
 			m_oValue.String = pNewString;
 		}
@@ -687,10 +719,10 @@ namespace JsonStthm
 			}
 			if (!m_bConst)
 			{
-				JsonValue* pNewMember = new JsonValue();
+				JsonValue* pNewMember = m_pAllocator->CreateJsonValue(m_pAllocator, m_pAllocator->pUserData);
 
 				size_t iNameLen = strlen(pName) + 1;
-				void* pNewString = JsonStthmMalloc(iNameLen);
+				void* pNewString = m_pAllocator->AllocString(iNameLen, m_pAllocator->pUserData);
 				memcpy(pNewString, (const void*)pName, iNameLen);
 				pNewMember->m_pName = (char*)pNewString;
 
@@ -742,7 +774,7 @@ namespace JsonStthm
 			{
 				do
 				{
-					JsonValue* pNewChild = new JsonValue();
+					JsonValue* pNewChild = m_pAllocator->CreateJsonValue(m_pAllocator, m_pAllocator->pUserData);
 
 					if (NULL != m_oValue.Childs.m_pLast)
 						m_oValue.Childs.m_pLast->m_pNext = pNewChild;
@@ -772,7 +804,7 @@ namespace JsonStthm
 				if (pSourceChild->m_pName != NULL)
 				{
 					size_t iNameLen = strlen(pSourceChild->m_pName) + 1;
-					char* pNewString = (char*)JsonStthmMalloc(iNameLen);
+					char* pNewString = m_pAllocator->AllocString(iNameLen, m_pAllocator->pUserData);
 					memcpy(pNewString, pSourceChild->m_pName, iNameLen);
 					pNewChild->m_pName = pNewString;
 				}
@@ -1096,7 +1128,7 @@ namespace JsonStthm
 		if (ReadStringValue(pString, oTempBuffer))
 		{
 			oValue.InitType(E_TYPE_STRING);
-			oValue.m_oValue.String = oTempBuffer.Take();
+			oValue.m_oValue.String = oTempBuffer.Take(oValue.m_pAllocator);
 			return true;
 		}
 		return false;
@@ -1188,7 +1220,7 @@ namespace JsonStthm
 	{
 		oValue.InitType(JsonValue::E_TYPE_OBJECT);
 
-		Internal::SkipSpaces( pString );
+		Internal::SkipSpaces(pString);
 
 		if( *pString == '}' )
 		{
@@ -1204,8 +1236,8 @@ namespace JsonStthm
 			if (*pString != '"' || !ReadStringValue(++pString, oTempBuffer))
 				return false;
 
-			JsonValue* pNewMember = new JsonValue();
-			pNewMember->m_pName = oTempBuffer.Take();
+			JsonValue* pNewMember = oValue.m_pAllocator->CreateJsonValue(oValue.m_pAllocator, oValue.m_pAllocator->pUserData);
+			pNewMember->m_pName = oTempBuffer.Take(oValue.m_pAllocator);
 
 			Internal::SkipSpaces(pString);
 
@@ -1218,7 +1250,7 @@ namespace JsonStthm
 
 			if (!pNewMember->Parse(pString, oTempBuffer))
 			{
-				delete pNewMember;
+				oValue.m_pAllocator->DeleteJsonValue(pNewMember, oValue.m_pAllocator->pUserData);
 				return false;
 			}
 
@@ -1263,11 +1295,12 @@ namespace JsonStthm
 		{
 			Internal::SkipSpaces(pString);
 
-			JsonValue* pNewValue = new JsonValue();
+			JsonValue* pNewValue = oValue.m_pAllocator->CreateJsonValue(oValue.m_pAllocator, oValue.m_pAllocator->pUserData);
 
 			if (!pNewValue->Parse(pString, oTempBuffer))
 			{
-				delete pNewValue;
+				oValue.m_pAllocator->DeleteJsonValue(pNewValue, oValue.m_pAllocator->pUserData);
+
 				return false;
 			}
 
@@ -1396,5 +1429,25 @@ namespace JsonStthm
 
 			++pInput;
 		}
+	}
+
+	JsonValue* JsonValue::DefaultAllocatorCreateJsonValue(Allocator* pAllocator, void* /*pUserData*/)
+	{
+		return new JsonValue(pAllocator);
+	}
+
+	void JsonValue::DefaultAllocatorDeleteJsonValue(JsonValue* pValue, void* /*pUserData*/)
+	{
+		delete pValue;
+	}
+
+	char* JsonValue::DefaultAllocatorAllocString(size_t iSize, void* /*pUserData*/)
+	{
+		return (char*)JsonStthmMalloc(iSize);
+	}
+
+	void JsonValue::DefaultAllocatorFreeString(char* pString, void* /*pUserData*/)
+	{
+		JsonStthmFree(pString);
 	}
 }
