@@ -1450,4 +1450,107 @@ namespace JsonStthm
 	{
 		JsonStthmFree(pString);
 	}
+
+	//////////////////////////////
+	// JsonDoc
+	//////////////////////////////
+
+	JsonDoc::JsonDoc(size_t iBlockSize)
+		: m_oRoot(&m_oAllocator)
+		, m_iBlockSize(iBlockSize)
+		, m_pLastBlock(NULL)
+	{
+		m_oAllocator.CreateJsonValue	= &JsonDoc::CreateJsonValue;
+		m_oAllocator.DeleteJsonValue	= &JsonDoc::DeleteJsonValue;
+		m_oAllocator.AllocString		= &JsonDoc::AllocString;
+		m_oAllocator.FreeString			= &JsonDoc::FreeString;
+		m_oAllocator.pUserData			= this;
+	}
+
+	JsonDoc::~JsonDoc()
+	{
+		Clear();
+	}
+
+	void JsonDoc::Clear()
+	{
+		m_oRoot.m_eType = JsonValue::E_TYPE_INVALID;
+		Block* pBlock = m_pLastBlock;
+		while (pBlock != NULL)
+		{
+			Block* pPrevious = pBlock->m_pPrevious;
+			JsonStthmFree(pBlock);
+			pBlock = pPrevious;
+		}
+		m_pLastBlock = NULL;
+	}
+
+	int JsonDoc::ReadString(const char* pJson)
+	{
+		Clear();
+		return m_oRoot.ReadString(pJson);
+	}
+
+	int JsonDoc::ReadFile(const char* pFilename)
+	{
+		Clear();
+		return m_oRoot.ReadFile(pFilename);
+	}
+
+	void* JsonDoc::Allocate(size_t iSize)
+	{
+		Block* pHead = m_pLastBlock;
+		if (pHead != NULL && (iSize + pHead->m_iUsed) <= m_iBlockSize)
+		{
+			void* pMem = ((char*)pHead) + pHead->m_iUsed;
+
+			pHead->m_iUsed += iSize;
+			return pMem;
+		}
+
+		size_t iAllocSize = sizeof(Block) + iSize;
+		size_t iBlockSize = (iAllocSize <= m_iBlockSize) ? m_iBlockSize : iAllocSize;
+		Block* pBlock = (Block*)JsonStthmMalloc(iBlockSize);
+
+		pBlock->m_iUsed = iAllocSize;
+
+		if (iAllocSize <= iBlockSize || pHead == NULL)
+		{
+			pBlock->m_pPrevious = pHead;
+			m_pLastBlock = pBlock;
+		}
+		else
+		{
+			pBlock->m_pPrevious = pHead->m_pPrevious;
+			pHead->m_pPrevious = pBlock;
+		}
+
+		return pBlock + 1;
+	}
+
+	JsonValue* JsonDoc::CreateJsonValue(Allocator* pAllocator, void* pUserData)
+	{
+		JsonValue* pValue = (JsonValue*)((JsonDoc*)pUserData)->Allocate(sizeof(JsonValue));
+		if (pValue != NULL)
+		{
+			JsonValue::ExplicitCtor(pValue, pAllocator);
+			return pValue;
+		}
+		return NULL;
+	}
+
+	void JsonDoc::DeleteJsonValue(JsonValue* /*pValue*/, void* /*pUserData*/)
+	{
+		// Do nothing
+	}
+
+	char* JsonDoc::AllocString(size_t iSize, void* pUserData)
+	{
+		return (char*)((JsonDoc*)pUserData)->Allocate(iSize);
+	}
+
+	void JsonDoc::FreeString(char* /*pString*/, void* /*pUserData*/)
+	{
+		// Do nothing
+	}
 }

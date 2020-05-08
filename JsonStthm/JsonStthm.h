@@ -154,6 +154,7 @@ namespace JsonStthm
 
 	class STTHM_API JsonValue
 	{
+		friend class JsonDoc;
 	public:
 		enum EType
 		{
@@ -300,6 +301,40 @@ namespace JsonStthm
 		static char*		DefaultAllocatorAllocString(size_t iSize, void* pUserData);
 		static void			DefaultAllocatorFreeString(char* pString, void* pUserData);
 		static Allocator	s_oDefaultAllocator;
+	};
+
+	// Quicker and use less memory than loading a Json with JsonValue, but read only
+	class STTHM_API JsonDoc
+	{
+	public:
+							JsonDoc(size_t iBlockSize = 4096);
+							~JsonDoc();
+
+		const JsonValue&	GetRoot() { return m_oRoot; }
+
+		void				Clear();
+
+		int					ReadString(const char* pJson);
+		int					ReadFile(const char* pFilename);
+	protected:
+		Allocator			m_oAllocator;
+		JsonValue			m_oRoot;
+
+		struct Block
+		{
+			size_t			m_iUsed;
+			Block*			m_pPrevious;
+		};
+
+		size_t				m_iBlockSize;
+		Block*				m_pLastBlock;
+
+		void*				Allocate(size_t iSize);
+
+		static JsonValue*	CreateJsonValue(Allocator* pAllocator, void* pUserData);
+		static void			DeleteJsonValue(JsonValue* pValue, void* pUserData);
+		static char*		AllocString(size_t iSize, void* pUserData);
+		static void			FreeString(char* pString, void* pUserData);
 	};
 }
 
