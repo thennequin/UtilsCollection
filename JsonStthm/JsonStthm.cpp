@@ -973,6 +973,309 @@ namespace JsonStthm
 		return bOk;
 	}
 
+	struct _ParseState
+	{
+		enum Enum
+		{
+			ReadType,
+			ReadStringValue,
+			ReadObjectName,
+			ReadObjectValue,
+			ReadArrayValue,
+			End
+		};
+	};
+	typedef _ParseState::Enum ParseState;
+
+#define GOTO_NextState() switch(iStackState[iCurrentStack]) {\
+	case ParseState::ReadType: goto ParseReadType;\
+	case ParseState::ReadStringValue: goto ParseReadStringValue;\
+	case ParseState::ReadObjectName: goto ParseReadObjectName;\
+	case ParseState::ReadObjectValue: goto ParseReadObjectValue;\
+	case ParseState::ReadArrayValue: goto ParseReadArrayValue;\
+	case ParseState::End: goto ParseEnd;\
+}
+
+	bool JsonValue::ParseFast(const char*& pString, Internal::CharBuffer& oTempBuffer)
+	{
+		int iCurrentStack = 0;
+		JsonValue* pStackValue[JsonStthmParserStackSize];
+		ParseState iStackState[JsonStthmParserStackSize];
+		pStackValue[0] = this;
+		iStackState[0] = ParseState::End;
+
+		bool bOk = pString != NULL && *pString != 0;
+
+	ParseReadType:
+		{
+			Internal::SkipSpaces(pString);
+
+			if (*pString == '"')
+			{
+				++iCurrentStack;
+				iStackState[iCurrentStack] = ParseState::ReadStringValue;
+				goto ParseReadStringToTempBuffer;
+			ParseReadStringValue:
+				--iCurrentStack;
+				pStackValue[iCurrentStack]->InitType(E_TYPE_STRING);
+				pStackValue[iCurrentStack]->m_oValue.String = oTempBuffer.Take();
+			}
+			else if (memcmp(pString, "NaN", 3) == 0)
+			{
+				pString += 3;
+				*pStackValue[iCurrentStack] = Internal::c_fNaN;
+			}
+			else if (memcmp(pString, "-Infinity", 9) == 0)
+			{
+				pString += 9;
+				*pStackValue[iCurrentStack] = -Internal::c_fInfinity;
+			}
+			else if (memcmp(pString, "Infinity", 8) == 0)
+			{
+				pString += 8;
+				*pStackValue[iCurrentStack] = Internal::c_fInfinity;
+			}
+			else if (Internal::IsDigit(*pString) || *pString == '-')
+			{
+				if (!ReadNumericValue(pString, *pStackValue[iCurrentStack]))
+					bOk = false;
+			}
+			else if (memcmp(pString, "true", 4) == 0)
+			{
+				pString += 4;
+				*pStackValue[iCurrentStack] = true;
+			}
+			else if (memcmp(pString, "false", 5) == 0)
+			{
+				pString += 5;
+				*pStackValue[iCurrentStack] = false;
+			}
+			else if (memcmp(pString, "null", 4) == 0)
+			{
+				pString += 4;
+				pStackValue[iCurrentStack]->InitType(E_TYPE_INVALID);
+			}
+			else if (*pString == '{')
+			{
+				++pString;
+				goto ParseReadObject;
+				/*++pString;
+				if (!ReadObjectValue(pString, *this, oTempBuffer))
+				{
+					bOk = false;
+				}*/
+			}
+			else if (*pString == '[')
+			{
+				++pString;
+				goto ParseReadArray;
+			}
+			else
+			{
+				bOk = false;
+			}
+
+			GOTO_NextState();
+		}
+
+	ParseReadStringToTempBuffer:
+		{
+			if (*pString != '"')
+			{
+				bOk = false;
+				GOTO_NextState();
+			}
+			++pString;
+
+			oTempBuffer.Clear();
+			while (*pString != 0)
+			{
+				if (*pString == '\\')
+				{
+					++pString;
+					if (!ReadSpecialChar(pString, oTempBuffer))
+						return false;
+					++pString;
+				}
+				else if (*pString == '"')
+				{
+					oTempBuffer += '\0';
+					++pString;
+					break;
+				}
+				else if ((unsigned int)*pString < ' ' || *pString == '\x7F')
+				{
+					bOk = false;
+					break;
+				}
+				else
+				{
+					oTempBuffer += *pString;
+					++pString;
+				}
+			}
+
+			GOTO_NextState();
+		}
+
+	ParseReadObject:
+		{
+			pStackValue[iCurrentStack]->InitType(JsonValue::E_TYPE_OBJECT);
+
+			Internal::SkipSpaces(pString);
+
+			if (*pString == '}')
+			{
+				++pString;
+				GOTO_NextState();
+			}
+
+			while (*pString != 0)
+			{
+				Internal::SkipSpaces(pString);
+
+				// Read member name
+
+				++iCurrentStack;
+				iStackState[iCurrentStack] = ParseState::ReadObjectName;
+
+				goto ParseReadStringToTempBuffer;
+
+			ParseReadObjectName:
+
+				if (bOk == false)
+				{
+					--iCurrentStack;
+					GOTO_NextState();
+				}
+
+				Internal::SkipSpaces(pString);
+
+				if (*pString != ':')
+				{
+					--iCurrentStack;
+					GOTO_NextState();
+				}
+
+				++pString;
+				Internal::SkipSpaces(pString);
+
+				pStackValue[iCurrentStack] = new JsonValue();
+				pStackValue[iCurrentStack]->m_pName = oTempBuffer.Take();
+
+				{
+					JsonValue* pObject = pStackValue[iCurrentStack - 1];
+					JsonValue* pMember = pStackValue[iCurrentStack];
+					if (pObject->m_oValue.Childs.m_pFirst == NULL)
+					{
+						pObject->m_oValue.Childs.m_pFirst = pMember;
+					}
+					else
+					{
+						pObject->m_oValue.Childs.m_pLast->m_pNext = pMember;
+					}
+					pObject->m_oValue.Childs.m_pLast = pMember;
+				}
+
+				iStackState[iCurrentStack] = ParseState::ReadObjectValue;
+
+				goto ParseReadType;
+
+			ParseReadObjectValue:
+
+				--iCurrentStack;
+
+				if (bOk == false)
+				{
+					GOTO_NextState();
+				}
+
+				Internal::SkipSpaces(pString);
+
+				if (*pString == '}')
+				{
+					++pString;
+					GOTO_NextState();
+				}
+				else if (*pString != ',')
+				{
+					break;
+				}
+				++pString;
+			}
+
+			GOTO_NextState();
+		}
+
+	ParseReadArray:
+		{
+			pStackValue[iCurrentStack]->InitType(JsonValue::E_TYPE_ARRAY);
+
+			Internal::SkipSpaces(pString);
+			if (*pString == ']')
+			{
+				++pString;
+				GOTO_NextState();
+			}
+
+			while (*pString != 0)
+			{
+				Internal::SkipSpaces(pString);
+
+				++iCurrentStack;
+				pStackValue[iCurrentStack] = new JsonValue();
+				iStackState[iCurrentStack] = ParseState::ReadArrayValue;
+
+				goto ParseReadType;
+
+			ParseReadArrayValue:
+
+				if (bOk == false)
+				{
+					delete pStackValue[iCurrentStack];
+
+					--iCurrentStack;
+					GOTO_NextState();
+				}
+
+				{
+					JsonValue* pArray = pStackValue[iCurrentStack - 1];
+					JsonValue* pValue = pStackValue[iCurrentStack];
+					if (pArray->m_oValue.Childs.m_pFirst == NULL)
+					{
+						pArray->m_oValue.Childs.m_pFirst = pValue;
+					}
+					else
+					{
+						pArray->m_oValue.Childs.m_pLast->m_pNext = pValue;
+					}
+					pArray->m_oValue.Childs.m_pLast = pValue;
+				}
+
+				--iCurrentStack;
+
+				Internal::SkipSpaces(pString);
+
+				if (*pString == ']')
+				{
+					++pString;
+					break;
+				}
+				else if (*pString != ',')
+				{
+					bOk = false;
+					break;
+				}
+				++pString;
+			}
+
+			GOTO_NextState();
+		}
+
+	ParseEnd:
+		return bOk;
+	}
+
 	// Static functions
 
 	JsonValue JsonValue::CreateConst()
