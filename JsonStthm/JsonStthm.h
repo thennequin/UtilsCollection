@@ -257,14 +257,17 @@ namespace JsonStthm
 			JsonValue*		m_pFirst;
 			JsonValue*		m_pLast;
 		};
-		union
+
+		union ValueUnion
 		{
-			JsonChilds		m_oChilds;
-			char*			m_pString;
-			bool			m_bBoolean;
-			int64_t			m_iInteger;
-			double			m_fFloat;
+			JsonChilds		Childs;
+			char*			String;
+			bool			Boolean;
+			int64_t			Integer;
+			double			Float;
 		};
+
+		ValueUnion			m_oValue;
 
 		bool				Parse(const char*& pString, Internal::CharBuffer& oTempBuffer);
 

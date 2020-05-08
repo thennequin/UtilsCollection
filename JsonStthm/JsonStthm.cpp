@@ -89,7 +89,7 @@ namespace JsonStthm
 	{
 		if (pJson != NULL && pJson->IsContainer())
 		{
-			m_pChild = pJson->m_oChilds.m_pFirst;
+			m_pChild = pJson->m_oValue.Childs.m_pFirst;
 		}
 		else
 		{
@@ -216,11 +216,11 @@ namespace JsonStthm
 			{
 			case E_TYPE_OBJECT:
 			case E_TYPE_ARRAY:
-				m_oChilds.m_pFirst = NULL;
-				m_oChilds.m_pLast = NULL;
+				m_oValue.Childs.m_pFirst = NULL;
+				m_oValue.Childs.m_pLast = NULL;
 				break;
 			case E_TYPE_STRING:
-				m_pString = NULL;
+				m_oValue.String = NULL;
 				break;
 			default:
 				break;
@@ -235,20 +235,20 @@ namespace JsonStthm
 		case E_TYPE_OBJECT:
 		case E_TYPE_ARRAY:
 		{
-			JsonValue* pChild = m_oChilds.m_pFirst;
+			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			while (pChild != NULL)
 			{
 				JsonValue* pTemp = pChild->m_pNext;
 				delete pChild;
 				pChild = pTemp;
 			}
-			m_oChilds.m_pFirst = NULL;
-			m_oChilds.m_pLast = NULL;
+			m_oValue.Childs.m_pFirst = NULL;
+			m_oValue.Childs.m_pLast = NULL;
 		}
 		break;
 		case E_TYPE_STRING:
-			JsonStthmFree(m_pString);
-			m_pString = NULL;
+			JsonStthmFree(m_oValue.String);
+			m_oValue.String = NULL;
 			break;
 		default:
 			break;
@@ -264,14 +264,14 @@ namespace JsonStthm
 	void JsonValue::SetStringValue(const char* pString)
 	{
 		JsonStthmAssert(IsString());
-		JsonStthmFree(m_pString);
-		m_pString = NULL;
+		JsonStthmFree(m_oValue.String);
+		m_oValue.String = NULL;
 		if (NULL != pString)
 		{
 			size_t iLen  = 1 + strlen(pString);
 			char* pNewString = (char*)JsonStthmMalloc(iLen);
 			memcpy(pNewString, pString, iLen);
-			m_pString = pNewString;
+			m_oValue.String = pNewString;
 		}
 	}
 
@@ -333,7 +333,7 @@ namespace JsonStthm
 			Internal::CharBuffer sIndent(iIndent, '\t');
 			Internal::CharBuffer sIndent2(iIndent + 1, '\t');
 			sOutJson += '{';
-			JsonValue* pChild = m_oChilds.m_pFirst;
+			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			bool bFirst = true;
 			while (pChild != NULL)
 			{
@@ -374,7 +374,7 @@ namespace JsonStthm
 			Internal::CharBuffer sIndent(iIndent, '\t');
 			Internal::CharBuffer sIndent2(iIndent + 1, '\t');
 			sOutJson += '[';
-			JsonValue* pChild = m_oChilds.m_pFirst;
+			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			bool bFirst = true;
 			while (pChild != NULL)
 			{
@@ -406,12 +406,12 @@ namespace JsonStthm
 		else if (m_eType == E_TYPE_STRING)
 		{
 			sOutJson += '\"';
-			WriteStringEscaped(sOutJson, m_pString);
+			WriteStringEscaped(sOutJson, m_oValue.String);
 			sOutJson += '\"';
 		}
 		else if (m_eType == E_TYPE_BOOLEAN)
 		{
-			if (m_bBoolean)
+			if (m_oValue.Boolean)
 			{
 				sOutJson.PushRange("true", 4);
 			}
@@ -423,19 +423,19 @@ namespace JsonStthm
 		else if (m_eType == E_TYPE_INTEGER)
 		{
 			char sBuffer[256];
-			snprintf(sBuffer, 256, "%lld", m_iInteger);
+			snprintf(sBuffer, 256, "%lld", m_oValue.Integer);
 			size_t iLen = strlen(sBuffer);
 			sOutJson.PushRange(sBuffer, iLen);
 		}
 		else if (m_eType == E_TYPE_FLOAT)
 		{
-			if (Internal::IsNaN(m_fFloat))
+			if (Internal::IsNaN(m_oValue.Float))
 			{
 				sOutJson.PushRange("NaN", 3);
 			}
-			else if (Internal::IsInfinite(m_fFloat))
+			else if (Internal::IsInfinite(m_oValue.Float))
 			{
-				if (m_fFloat < 0.f)
+				if (m_oValue.Float < 0.f)
 					sOutJson.PushRange("-Infinity", 9);
 				else
 					sOutJson.PushRange("Infinity", 8);
@@ -443,7 +443,7 @@ namespace JsonStthm
 			else
 			{
 				char sBuffer[256];
-				snprintf(sBuffer, 256, "%.17g", m_fFloat);
+				snprintf(sBuffer, 256, "%.17g", m_oValue.Float);
 				size_t iLen = strlen(sBuffer);
 				sOutJson.PushRange(sBuffer, iLen);
 			}
@@ -495,7 +495,7 @@ namespace JsonStthm
 		int iCount = 0;
 		if (m_eType == E_TYPE_OBJECT || m_eType == E_TYPE_ARRAY)
 		{
-			JsonValue* pChild = m_oChilds.m_pFirst;
+			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			while (pChild != NULL)
 			{
 				++iCount;
@@ -509,32 +509,32 @@ namespace JsonStthm
 	const char* JsonValue::ToString() const
 	{
 		if (m_eType == E_TYPE_STRING)
-			return m_pString;
+			return m_oValue.String;
 		return NULL;
 	}
 
 	bool JsonValue::ToBoolean() const
 	{
 		if (m_eType == E_TYPE_BOOLEAN)
-			return m_bBoolean;
+			return m_oValue.Boolean;
 		return false;
 	}
 
 	int64_t JsonValue::ToInteger() const
 	{
 		if (m_eType == E_TYPE_INTEGER)
-			return m_iInteger;
+			return m_oValue.Integer;
 		else if (m_eType == E_TYPE_FLOAT)
-			return (int64_t)m_fFloat;
+			return (int64_t)m_oValue.Float;
 		return 0;
 	}
 
 	double JsonValue::ToFloat() const
 	{
 		if (m_eType == E_TYPE_FLOAT)
-			return m_fFloat;
+			return m_oValue.Float;
 		else if (m_eType == E_TYPE_INTEGER)
-			return (double)m_iInteger;
+			return (double)m_oValue.Integer;
 		return 0.0;
 	}
 
@@ -561,7 +561,7 @@ namespace JsonStthm
 		if (m_bConst == false)
 		{
 			InitType(E_TYPE_BOOLEAN);
-			m_bBoolean = bValue;
+			m_oValue.Boolean = bValue;
 		}
 	}
 
@@ -571,7 +571,7 @@ namespace JsonStthm
 		if (m_bConst == false)
 		{
 			InitType(E_TYPE_INTEGER);
-			m_iInteger = iValue;
+			m_oValue.Integer = iValue;
 		}
 	}
 
@@ -581,7 +581,7 @@ namespace JsonStthm
 		if (m_bConst == false)
 		{
 			InitType(E_TYPE_FLOAT);
-			m_fFloat = fValue;
+			m_oValue.Float = fValue;
 		}
 	}
 
@@ -597,7 +597,7 @@ namespace JsonStthm
 		case E_TYPE_OBJECT:
 		{
 			// We don't care if members order is not the same
-			const JsonValue* pChildLeft = m_oChilds.m_pFirst;
+			const JsonValue* pChildLeft = m_oValue.Childs.m_pFirst;
 			while (pChildLeft != NULL)
 			{
 				if (*pChildLeft != oRight[pChildLeft->m_pName])
@@ -609,8 +609,8 @@ namespace JsonStthm
 		}
 		case E_TYPE_ARRAY:
 		{
-			JsonValue* pChildLeft = m_oChilds.m_pFirst;
-			JsonValue* pChildRight = oRight.m_oChilds.m_pFirst;
+			JsonValue* pChildLeft = m_oValue.Childs.m_pFirst;
+			JsonValue* pChildRight = oRight.m_oValue.Childs.m_pFirst;
 			while (pChildLeft != NULL && pChildRight != NULL)
 			{
 				if (*pChildLeft != *pChildRight)
@@ -625,19 +625,19 @@ namespace JsonStthm
 			break;
 		}
 		case E_TYPE_STRING:
-			if (strcmp(m_pString, oRight.m_pString) != 0)
+			if (strcmp(m_oValue.String, oRight.m_oValue.String) != 0)
 				return false;
 			break;
 		case E_TYPE_BOOLEAN:
-			if (memcmp(&m_bBoolean, &oRight.m_bBoolean, sizeof(m_bBoolean)) != 0)
+			if (memcmp(&m_oValue.Boolean, &oRight.m_oValue.Boolean, sizeof(m_oValue.Boolean)) != 0)
 				return false;
 			break;
 		case E_TYPE_INTEGER:
-			if (memcmp(&m_iInteger, &oRight.m_iInteger, sizeof(m_iInteger)) != 0)
+			if (memcmp(&m_oValue.Integer, &oRight.m_oValue.Integer, sizeof(m_oValue.Integer)) != 0)
 				return false;
 			break;
 		case E_TYPE_FLOAT:
-			if (memcmp(&m_fFloat, &oRight.m_fFloat, sizeof(m_fFloat)) != 0)
+			if (memcmp(&m_oValue.Float, &oRight.m_oValue.Float, sizeof(m_oValue.Float)) != 0)
 				return false;
 			break;
 		}
@@ -654,7 +654,7 @@ namespace JsonStthm
 	{
 		if (m_eType == E_TYPE_OBJECT)
 		{
-			JsonValue* pChild = m_oChilds.m_pFirst;
+			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			while (pChild != NULL)
 			{
 				if (strcmp(pChild->m_pName, pName) == 0)
@@ -676,7 +676,7 @@ namespace JsonStthm
 			InitType(E_TYPE_OBJECT);
 		if (m_eType == E_TYPE_OBJECT)
 		{
-			JsonValue* pChild = m_oChilds.m_pFirst;
+			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			while (pChild != NULL)
 			{
 				if (strcmp(pChild->m_pName, pName) == 0)
@@ -694,12 +694,12 @@ namespace JsonStthm
 				memcpy(pNewString, (const void*)pName, iNameLen);
 				pNewMember->m_pName = (char*)pNewString;
 
-				if (NULL != m_oChilds.m_pLast)
-					m_oChilds.m_pLast->m_pNext = pNewMember;
+				if (NULL != m_oValue.Childs.m_pLast)
+					m_oValue.Childs.m_pLast->m_pNext = pNewMember;
 				else
-					m_oChilds.m_pFirst = pNewMember;
+					m_oValue.Childs.m_pFirst = pNewMember;
 
-				m_oChilds.m_pLast = pNewMember;
+				m_oValue.Childs.m_pLast = pNewMember;
 				return *pNewMember;
 			}
 		}
@@ -710,7 +710,7 @@ namespace JsonStthm
 	{
 		if (m_eType == E_TYPE_OBJECT || m_eType == E_TYPE_ARRAY)
 		{
-			JsonValue* pChild = m_oChilds.m_pFirst;
+			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			int iCurrent = 0;
 			while (pChild != NULL)
 			{
@@ -728,7 +728,7 @@ namespace JsonStthm
 			InitType(E_TYPE_ARRAY);
 		if (m_eType == E_TYPE_OBJECT || m_eType == E_TYPE_ARRAY)
 		{
-			JsonValue* pChild = m_oChilds.m_pFirst;
+			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			int iCurrent = 0;
 			while (pChild != NULL)
 			{
@@ -744,15 +744,15 @@ namespace JsonStthm
 				{
 					JsonValue* pNewChild = new JsonValue();
 
-					if (NULL != m_oChilds.m_pLast)
-						m_oChilds.m_pLast->m_pNext = pNewChild;
+					if (NULL != m_oValue.Childs.m_pLast)
+						m_oValue.Childs.m_pLast->m_pNext = pNewChild;
 					else
-						m_oChilds.m_pFirst = pNewChild;
+						m_oValue.Childs.m_pFirst = pNewChild;
 
-					m_oChilds.m_pLast = pNewChild;
+					m_oValue.Childs.m_pLast = pNewChild;
 				}
 				while (iCurrent++ != iIndex);
-				return *m_oChilds.m_pLast;
+				return *m_oValue.Childs.m_pLast;
 			}
 		}
 		return JsonValue::INVALID;
@@ -764,7 +764,7 @@ namespace JsonStthm
 		{
 			InitType(E_TYPE_OBJECT);
 
-			JsonValue* pSourceChild = oValue.m_oChilds.m_pFirst;;
+			JsonValue* pSourceChild = oValue.m_oValue.Childs.m_pFirst;
 			while (pSourceChild != NULL)
 			{
 				JsonValue* pNewChild = new JsonValue(*pSourceChild);
@@ -777,12 +777,12 @@ namespace JsonStthm
 					pNewChild->m_pName = pNewString;
 				}
 
-				if (NULL != m_oChilds.m_pLast)
-					m_oChilds.m_pLast->m_pNext = pNewChild;
+				if (NULL != m_oValue.Childs.m_pLast)
+					m_oValue.Childs.m_pLast->m_pNext = pNewChild;
 				else
-					m_oChilds.m_pFirst = pNewChild;
+					m_oValue.Childs.m_pFirst = pNewChild;
 
-				m_oChilds.m_pLast = pNewChild;
+				m_oValue.Childs.m_pLast = pNewChild;
 
 				pSourceChild = pSourceChild->m_pNext;
 			}
@@ -791,17 +791,17 @@ namespace JsonStthm
 		{
 			InitType(E_TYPE_ARRAY);
 
-			JsonValue* pSourceChild = oValue.m_oChilds.m_pFirst;;
+			JsonValue* pSourceChild = oValue.m_oValue.Childs.m_pFirst;
 			while (pSourceChild != NULL)
 			{
 				JsonValue* pNewChild = new JsonValue(*pSourceChild);
 
-				if (NULL != m_oChilds.m_pLast)
-					m_oChilds.m_pLast->m_pNext = pNewChild;
+				if (NULL != m_oValue.Childs.m_pLast)
+					m_oValue.Childs.m_pLast->m_pNext = pNewChild;
 				else
-					m_oChilds.m_pFirst = pNewChild;
+					m_oValue.Childs.m_pFirst = pNewChild;
 
-				m_oChilds.m_pLast = pNewChild;
+				m_oValue.Childs.m_pLast = pNewChild;
 
 				pSourceChild = pSourceChild->m_pNext;
 			}
@@ -867,12 +867,12 @@ namespace JsonStthm
 		{
 			JsonValue* pNewValue = new JsonValue(oValue);
 
-			if (NULL != m_oChilds.m_pLast)
-				m_oChilds.m_pLast->m_pNext = pNewValue;
+			if (NULL != m_oValue.Childs.m_pLast)
+				m_oValue.Childs.m_pLast->m_pNext = pNewValue;
 			else
-				m_oChilds.m_pFirst = pNewValue;
+				m_oValue.Childs.m_pFirst = pNewValue;
 
-			m_oChilds.m_pLast = pNewValue;
+			m_oValue.Childs.m_pLast = pNewValue;
 		}
 		else if (m_eType == E_TYPE_STRING)
 		{
@@ -880,10 +880,10 @@ namespace JsonStthm
 			{
 				Internal::CharBuffer oNewStr;
 				const char* pAddString = oValue.ToString();
-				size_t iLen1 = strlen(m_pString);
+				size_t iLen1 = strlen(m_oValue.String);
 				size_t iLen2 = strlen(pAddString);
 				oNewStr.Reserve(iLen1 + iLen2 + 1);
-				oNewStr.PushRange(m_pString, iLen1);
+				oNewStr.PushRange(m_oValue.String, iLen1);
 				oNewStr.PushRange(pAddString, iLen2);
 				oNewStr.Push(0);
 				SetStringValue(oNewStr.Data());
@@ -1096,7 +1096,7 @@ namespace JsonStthm
 		if (ReadStringValue(pString, oTempBuffer))
 		{
 			oValue.InitType(E_TYPE_STRING);
-			oValue.m_pString = oTempBuffer.Take();
+			oValue.m_oValue.String = oTempBuffer.Take();
 			return true;
 		}
 		return false;
@@ -1222,15 +1222,15 @@ namespace JsonStthm
 				return false;
 			}
 
-			if (oValue.m_oChilds.m_pFirst == NULL)
+			if (oValue.m_oValue.Childs.m_pFirst == NULL)
 			{
-				oValue.m_oChilds.m_pFirst = pNewMember;
+				oValue.m_oValue.Childs.m_pFirst = pNewMember;
 			}
 			else
 			{
-				oValue.m_oChilds.m_pLast->m_pNext = pNewMember;
+				oValue.m_oValue.Childs.m_pLast->m_pNext = pNewMember;
 			}
-			oValue.m_oChilds.m_pLast = pNewMember;
+			oValue.m_oValue.Childs.m_pLast = pNewMember;
 
 			Internal::SkipSpaces(pString);
 
@@ -1271,15 +1271,15 @@ namespace JsonStthm
 				return false;
 			}
 
-			if (oValue.m_oChilds.m_pFirst == NULL)
+			if (oValue.m_oValue.Childs.m_pFirst == NULL)
 			{
-				oValue.m_oChilds.m_pFirst = pNewValue;
+				oValue.m_oValue.Childs.m_pFirst = pNewValue;
 			}
 			else
 			{
-				oValue.m_oChilds.m_pLast->m_pNext = pNewValue;
+				oValue.m_oValue.Childs.m_pLast->m_pNext = pNewValue;
 			}
-			oValue.m_oChilds.m_pLast = pNewValue;
+			oValue.m_oValue.Childs.m_pLast = pNewValue;
 
 			Internal::SkipSpaces(pString);
 
