@@ -1123,14 +1123,14 @@ namespace JsonStthm
 		uint64_t lValue = 0;
 		int iNegFract = 0;
 
-		while (IsDigit(*pString))
+		while (Internal::IsDigit(*pString))
 			lValue = lValue * 10 + (*pString++ & 0xF);
 
 		if (*pString == '.')
 		{
 			const char* pStart = ++pString;
 
-			while (IsDigit(*pString))
+			while (Internal::IsDigit(*pString))
 				lValue = lValue * 10 + (*pString++ & 0xF);
 
 			iNegFract = (int)(pString - pStart);
@@ -1151,7 +1151,7 @@ namespace JsonStthm
 				}
 
 				uint64_t iExpValue = 0;
-				while (IsDigit(*pString))
+				while (Internal::IsDigit(*pString))
 					iExpValue = iExpValue * 10 + (*pString++ & 0xF);
 
 				iNegFract += bNegExp ? (int)iExpValue : -(int)iExpValue;
