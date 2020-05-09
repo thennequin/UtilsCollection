@@ -241,7 +241,8 @@ namespace JsonStthm
 	{
 		if (m_eType != eType)
 		{
-			Reset();
+			if (m_eType == E_TYPE_OBJECT || m_eType == E_TYPE_ARRAY || m_eType == E_TYPE_STRING)
+				Reset();
 
 			m_eType = eType;
 			switch (eType)
@@ -276,12 +277,14 @@ namespace JsonStthm
 			}
 			m_oValue.Childs.m_pFirst = NULL;
 			m_oValue.Childs.m_pLast = NULL;
+			break;
 		}
-		break;
 		case E_TYPE_STRING:
+		{
 			m_pAllocator->FreeString(m_oValue.String, m_pAllocator->pUserData);
 			m_oValue.String = NULL;
 			break;
+		}
 		default:
 			break;
 		}
