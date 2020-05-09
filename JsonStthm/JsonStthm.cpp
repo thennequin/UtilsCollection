@@ -317,7 +317,7 @@ namespace JsonStthm
 			Internal::CharBuffer oTempBuffer;
 			Reset();
 			const char* pEnd = pJson;
-			if (Parse(pEnd, oTempBuffer) == false)
+			if (Parse(pEnd) == false)
 			{
 				int iLine = 1;
 				int iReturn = 1;
@@ -929,7 +929,7 @@ namespace JsonStthm
 		return *this;
 	}
 
-	bool JsonValue::Parse(const char*& pString, Internal::CharBuffer& oTempBuffer)
+	bool JsonValue::Parse(const char*& pString)
 	{
 		bool bOk = pString != NULL && *pString != 0;
 		while (*pString != 0 && bOk)
@@ -937,9 +937,16 @@ namespace JsonStthm
 			while (Internal::IsSpace(*pString)) ++pString;
 			if (*pString == '"')
 			{
-				++pString;
-				if (ReadStringValue(pString, *this, oTempBuffer) == false)
+				char* pValue = ReadStringValue(++pString, m_pAllocator);
+				if (pValue == NULL)
+				{
 					bOk = false;
+					break;
+				}
+
+				InitType(E_TYPE_STRING);
+				m_oValue.String = pValue;
+
 				break;
 			}
 			else if (memcmp(pString, "NaN", 3) == 0)
@@ -987,7 +994,7 @@ namespace JsonStthm
 			else if (*pString == '{')
 			{
 				++pString;
-				if (ReadObjectValue(pString, *this, oTempBuffer) == false)
+				if (ReadObjectValue(pString, *this) == false)
 				{
 					bOk = false;
 				}
@@ -996,7 +1003,7 @@ namespace JsonStthm
 			else if (*pString == '[')
 			{
 				++pString;
-				if (ReadArrayValue(pString, *this, oTempBuffer) == false)
+				if (ReadArrayValue(pString, *this) == false)
 					bOk = false;
 				break;
 			}
@@ -1019,34 +1026,34 @@ namespace JsonStthm
 		return oValue;
 	}
 
-	bool JsonValue::ReadSpecialChar(const char*& pString, Internal::CharBuffer& oTempBuffer)
+	int JsonValue::ReadSpecialChar(const char*& pString, char* pOut)
 	{
-		if (*pString == 'n') oTempBuffer += '\n';
-		else if (*pString == 'r') oTempBuffer += '\r';
-		else if (*pString == 't') oTempBuffer += '\t';
-		else if (*pString == 'b') oTempBuffer += '\b';
-		else if (*pString == 'f') oTempBuffer += '\f';
-		else if (*pString == '"') oTempBuffer += '"';
-		else if (*pString == '\\') oTempBuffer += '\\';
-		else if (*pString == '/') oTempBuffer += '/';
+		if (*pString == 'n')		{ pOut[0] = '\n';	return 1; }
+		else if (*pString == 'r')	{ pOut[0] = '\r';	return 1; }
+		else if (*pString == 't')	{ pOut[0] = '\t';	return 1; }
+		else if (*pString == 'b')	{ pOut[0] = '\b';	return 1; }
+		else if (*pString == 'f')	{ pOut[0] = '\f';	return 1; }
+		else if (*pString == '"')	{ pOut[0] = '"';	return 1; }
+		else if (*pString == '\\')	{ pOut[0] = '\\';	return 1; }
+		else if (*pString == '/')	{ pOut[0] = '/';	return 1; }
 		else if (*pString == 'u')
 		{
 			uint32_t iChar = 0;
 			for (int i = 0; i < 4; ++i)
 			{
 				if (Internal::IsXDigit(*++pString))
-					iChar = iChar * 16 + Internal::CharToInt((unsigned char)*pString);
+					iChar = iChar * 16 + Internal::CharToInt(*pString);
 				else
-					return false;
+					return 0;
 			}
 
 			if (iChar >= 0xD800 && iChar <= 0xDFFF) // UTF16 Surrogate pair
 			{
 				if ((iChar & 0xFC00) != 0xD800)
-					return false; //Invalid first pair code
+					return 0; //Invalid first pair code
 
 				if (*++pString != '\\' || *++pString != 'u')
-					return false; //Not a valid pair
+					return 0; //Not a valid pair
 
 				uint32_t iChar2 = 0;
 				for (int i = 0; i < 4; ++i)
@@ -1054,89 +1061,109 @@ namespace JsonStthm
 					if (Internal::IsXDigit(*++pString))
 						iChar2 = iChar2 * 16 + Internal::CharToInt((unsigned char)*pString);
 					else
-						return false;
+						return 0;
 				}
 
 				if ((iChar2 & 0xFC00) != 0xDC00)
-					return false; //Invalid second pair code
+					return 0; //Invalid second pair code
 
 				iChar = 0x10000 + (((iChar & 0x3FF) << 10) | (iChar2 & 0x3FF));
 			}
 
 			if (iChar < 0x80)
 			{
-				oTempBuffer += (char)iChar;
+				pOut[0] = (char)iChar;
+				return 1;
 			}
-			else if (iChar >= 0x80 && iChar <= 0x7FF)
+			if (iChar >= 0x80 && iChar <= 0x7FF)
 			{
-				oTempBuffer += (char)(0xC0 | ((iChar >>  6)));
-				oTempBuffer += (char)(0x80 | ((iChar >>  0 ) & 0x3F));
+				pOut[0] = (char)(0xC0 | ((iChar >> 6)));
+				pOut[1] = (char)(0x80 | ((iChar >> 0) & 0x3F));
+				return 2;
 			}
-			else if (iChar >= 0x800 && iChar <= 0xFFFF)
+			if (iChar >= 0x800 && iChar <= 0xFFFF)
 			{
-				oTempBuffer += (char)(0xE0 | ((iChar >> 12)));
-				oTempBuffer += (char)(0x80 | ((iChar >>  6) & 0x3F));
-				oTempBuffer += (char)(0x80 | ((iChar >>  0) & 0x3F));
+				pOut[0] = (char)(0xE0 | ((iChar >> 12)));
+				pOut[1] = (char)(0x80 | ((iChar >> 6) & 0x3F));
+				pOut[2] = (char)(0x80 | ((iChar >> 0) & 0x3F));
+				return 3;
 			}
-			else if (iChar >= 0x10000 && iChar <= 0x10FFFF)
+			if (iChar >= 0x10000 && iChar <= 0x10FFFF)
 			{
-				oTempBuffer += (char)(0xF0 | ((iChar >> 18)));
-				oTempBuffer += (char)(0x80 | ((iChar >> 12) & 0x3F));
-				oTempBuffer += (char)(0x80 | ((iChar >>  6) & 0x3F));
-				oTempBuffer += (char)(0x80 | ((iChar >>  0) & 0x3F));
+				pOut[0] = (char)(0xF0 | ((iChar >> 18)));
+				pOut[1] = (char)(0x80 | ((iChar >> 12) & 0x3F));
+				pOut[2] = (char)(0x80 | ((iChar >> 6) & 0x3F));
+				pOut[3] = (char)(0x80 | ((iChar >> 0) & 0x3F));
+				return 4;
 			}
-			else
-			{
-				return false;
-			}
-			return true;
 		}
-		else
-			return false;
 
-		return true;
+		return 0;
 	}
 
-	bool JsonValue::ReadStringValue(const char*& pString, Internal::CharBuffer& oTempBuffer)
+	char* JsonValue::ReadStringValue(const char*& pString, Allocator* pAllocator)
 	{
-		oTempBuffer.Clear();
-		while (*pString != 0)
+		size_t iLen = 0;
+		// Read string length
 		{
-			if (*pString == '\\')
+			char pTemp[4];
+			const char* pCursor = pString;
+			while (*pCursor != 0)
 			{
-				++pString;
-				if (ReadSpecialChar(pString, oTempBuffer) == false)
-					return false;
-				++pString;
-			}
-			else if (*pString == '"')
-			{
-				oTempBuffer += '\0';
-				++pString;
-				return true;
-			}
-			else if ((unsigned int)*pString < ' ' || *pString == '\x7F')
-			{
-				return false;
-			}
-			else
-			{
-				oTempBuffer += *pString;
-				++pString;
-			}
-		}
-		return false;
-	}
+				if (*pCursor == '\\')
+				{
+					int iCharLen = ReadSpecialChar(++pCursor, pTemp);
+					if (iCharLen == 0)
+						return NULL;
+					iLen += iCharLen;
+					++pCursor;
+					continue;
+				}
+				else if (*pCursor == '"')
+				{
+					++pCursor;
+					break;
+				}
+				else if (*pCursor < ' ' || *pCursor == '\x7F')
+				{
+					return NULL;
+				}
 
-	bool JsonValue::ReadStringValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer)
-	{
-		if (ReadStringValue(pString, oTempBuffer))
-		{
-			oValue.InitType(E_TYPE_STRING);
-			oValue.m_oValue.String = oTempBuffer.Take(oValue.m_pAllocator);
-			return true;
+				++iLen;
+				++pCursor;
+			}
 		}
-		return false;
+
+		// Alloc string
+		char* pNewString = pAllocator->AllocString(iLen + 1, pAllocator->pUserData);
+		pNewString[iLen] = '\0';
+		char* pNewStringCursor = pNewString;
+
+		// Read string
+		{
+			while (*pString != 0)
+			{
+				if (*pString == '\\')
+				{
+					int iCharLen = ReadSpecialChar(++pString, pNewString);
+					if (iCharLen == 0)
+						return NULL;
+					pNewStringCursor += iCharLen;
+					++pString;
+					continue;
+				}
+				else if (*pString == '"')
+				{
+					++pString;
+					return pNewString;
+				}
+
+				*pNewStringCursor = *pString;
+				++pNewStringCursor;
+				++pString;
+			}
+		}
+		return NULL;
 	}
 
 	bool JsonValue::ReadNumericValue(const char*& pString, JsonValue& oValue)
@@ -1221,7 +1248,7 @@ namespace JsonStthm
 	#endif // !STTHM_USE_CUSTOM_NUMERIC_PARSER
 	}
 
-	bool JsonValue::ReadObjectValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer)
+	bool JsonValue::ReadObjectValue(const char*& pString, JsonValue& oValue)
 	{
 		oValue.InitType(JsonValue::E_TYPE_OBJECT);
 
@@ -1238,11 +1265,15 @@ namespace JsonStthm
 			Internal::SkipSpaces(pString);
 
 			// Read member name
-			if (*pString != '"' || !ReadStringValue(++pString, oTempBuffer))
+			if (*pString != '"')
+				return false;
+
+			char* pName = ReadStringValue(++pString, oValue.m_pAllocator);
+			if (pName == NULL)
 				return false;
 
 			JsonValue* pNewMember = oValue.m_pAllocator->CreateJsonValue(oValue.m_pAllocator, oValue.m_pAllocator->pUserData);
-			pNewMember->m_pName = oTempBuffer.Take(oValue.m_pAllocator);
+			pNewMember->m_pName = pName;
 
 			Internal::SkipSpaces(pString);
 
@@ -1253,7 +1284,7 @@ namespace JsonStthm
 
 			Internal::SkipSpaces(pString);
 
-			if (pNewMember->Parse(pString, oTempBuffer) == false)
+			if (pNewMember->Parse(pString) == false)
 			{
 				oValue.m_pAllocator->DeleteJsonValue(pNewMember, oValue.m_pAllocator->pUserData);
 				return false;
@@ -1285,7 +1316,7 @@ namespace JsonStthm
 		return false;
 	}
 
-	bool JsonValue::ReadArrayValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer)
+	bool JsonValue::ReadArrayValue(const char*& pString, JsonValue& oValue)
 	{
 		oValue.InitType(JsonValue::E_TYPE_ARRAY);
 
@@ -1302,7 +1333,7 @@ namespace JsonStthm
 
 			JsonValue* pNewValue = oValue.m_pAllocator->CreateJsonValue(oValue.m_pAllocator, oValue.m_pAllocator->pUserData);
 
-			if (pNewValue->Parse(pString, oTempBuffer) == false)
+			if (pNewValue->Parse(pString) == false)
 			{
 				oValue.m_pAllocator->DeleteJsonValue(pNewValue, oValue.m_pAllocator->pUserData);
 

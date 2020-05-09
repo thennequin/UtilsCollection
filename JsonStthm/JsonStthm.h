@@ -284,16 +284,15 @@ namespace JsonStthm
 
 		ValueUnion			m_oValue;
 
-		bool				Parse(const char*& pString, Internal::CharBuffer& oTempBuffer);
+		bool				Parse(const char*& pString);
 
 		static JsonValue	CreateConst();
 
-		static inline bool	ReadSpecialChar(const char*& pString, Internal::CharBuffer& oTempBuffer);
-		static inline bool	ReadStringValue(const char*& pString, Internal::CharBuffer& oTempBuffer);
-		static inline bool	ReadStringValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
+		static inline int	ReadSpecialChar(const char*& pString, char* pOut);
+		static inline char*	ReadStringValue(const char*& pString, Allocator* pAllocator);
 		static inline bool	ReadNumericValue(const char*& pString, JsonValue& oValue);
-		static inline bool	ReadObjectValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
-		static inline bool	ReadArrayValue(const char*& pString, JsonValue& oValue, Internal::CharBuffer& oTempBuffer);
+		static inline bool	ReadObjectValue(const char*& pString, JsonValue& oValue);
+		static inline bool	ReadArrayValue(const char*& pString, JsonValue& oValue);
 		static void			WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pBuffer);
 
 		static JsonValue*	DefaultAllocatorCreateJsonValue(Allocator* pAllocator, void* pUserData);
