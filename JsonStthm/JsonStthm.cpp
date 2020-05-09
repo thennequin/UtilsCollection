@@ -317,7 +317,7 @@ namespace JsonStthm
 			Internal::CharBuffer oTempBuffer;
 			Reset();
 			const char* pEnd = pJson;
-			if (!Parse(pEnd, oTempBuffer))
+			if (Parse(pEnd, oTempBuffer) == false)
 			{
 				int iLine = 1;
 				int iReturn = 1;
@@ -372,7 +372,7 @@ namespace JsonStthm
 			bool bFirst = true;
 			while (pChild != NULL)
 			{
-				if (!bFirst)
+				if (bFirst == false)
 				{
 					sOutJson += ',';
 				}
@@ -381,7 +381,7 @@ namespace JsonStthm
 					bFirst = false;
 				}
 
-				if (!bCompact)
+				if (bCompact == false)
 				{
 					sOutJson += '\n';
 					sOutJson.PushRange(sIndent2.Data(), sIndent2.Size());
@@ -397,11 +397,13 @@ namespace JsonStthm
 				pChild->Write(sOutJson, iIndent + 1, bCompact);
 				pChild = pChild->m_pNext;
 			}
-			if (!bCompact)
+
+			if (bCompact == false)
 			{
 				sOutJson += '\n';
 				sOutJson.PushRange(sIndent.Data(), sIndent.Size());
 			}
+
 			sOutJson += '}';
 		}
 		else if (m_eType == E_TYPE_ARRAY)
@@ -413,7 +415,7 @@ namespace JsonStthm
 			bool bFirst = true;
 			while (pChild != NULL)
 			{
-				if (!bFirst)
+				if (bFirst == false)
 				{
 					sOutJson += ',';
 				}
@@ -422,7 +424,7 @@ namespace JsonStthm
 					bFirst = false;
 				}
 
-				if (!bCompact)
+				if (bCompact == false)
 				{
 					sOutJson += '\n';
 					sOutJson.PushRange(sIndent2.Data(), sIndent2.Size());
@@ -431,7 +433,7 @@ namespace JsonStthm
 				pChild->Write(sOutJson, iIndent + 1, bCompact);
 				pChild = pChild->m_pNext;
 			}
-			if (!bCompact)
+			if (bCompact == false)
 			{
 				sOutJson += '\n';
 				sOutJson.PushRange(sIndent.Data(), sIndent.Size());
@@ -720,7 +722,7 @@ namespace JsonStthm
 					break;
 				pChild = pChild->m_pNext;
 			}
-			if (!m_bConst)
+			if (m_bConst == false)
 			{
 				JsonValue* pNewMember = m_pAllocator->CreateJsonValue(m_pAllocator, m_pAllocator->pUserData);
 
@@ -863,7 +865,7 @@ namespace JsonStthm
 #ifdef JsonStthmString
 	JsonValue& JsonValue::operator =(const JsonStthmString& sValue)
 	{
-		if (!m_bConst)
+		if (m_bConst == false)
 		{
 			InitType(E_TYPE_STRING);
 			SetStringValue(sValue.c_str());
@@ -936,7 +938,7 @@ namespace JsonStthm
 			if (*pString == '"')
 			{
 				++pString;
-				if (!ReadStringValue(pString, *this, oTempBuffer))
+				if (ReadStringValue(pString, *this, oTempBuffer) == false)
 					bOk = false;
 				break;
 			}
@@ -960,7 +962,7 @@ namespace JsonStthm
 			}
 			else if (Internal::IsDigit(*pString) || *pString == '-')
 			{
-				if (!ReadNumericValue(pString, *this))
+				if (ReadNumericValue(pString, *this) == false)
 					bOk = false;
 				break;
 			}
@@ -985,7 +987,7 @@ namespace JsonStthm
 			else if (*pString == '{')
 			{
 				++pString;
-				if (!ReadObjectValue(pString, *this, oTempBuffer))
+				if (ReadObjectValue(pString, *this, oTempBuffer) == false)
 				{
 					bOk = false;
 				}
@@ -994,7 +996,7 @@ namespace JsonStthm
 			else if (*pString == '[')
 			{
 				++pString;
-				if (!ReadArrayValue(pString, *this, oTempBuffer))
+				if (ReadArrayValue(pString, *this, oTempBuffer) == false)
 					bOk = false;
 				break;
 			}
@@ -1103,7 +1105,7 @@ namespace JsonStthm
 			if (*pString == '\\')
 			{
 				++pString;
-				if (!ReadSpecialChar(pString, oTempBuffer))
+				if (ReadSpecialChar(pString, oTempBuffer) == false)
 					return false;
 				++pString;
 			}
@@ -1251,7 +1253,7 @@ namespace JsonStthm
 
 			Internal::SkipSpaces(pString);
 
-			if (!pNewMember->Parse(pString, oTempBuffer))
+			if (pNewMember->Parse(pString, oTempBuffer) == false)
 			{
 				oValue.m_pAllocator->DeleteJsonValue(pNewMember, oValue.m_pAllocator->pUserData);
 				return false;
@@ -1300,7 +1302,7 @@ namespace JsonStthm
 
 			JsonValue* pNewValue = oValue.m_pAllocator->CreateJsonValue(oValue.m_pAllocator, oValue.m_pAllocator->pUserData);
 
-			if (!pNewValue->Parse(pString, oTempBuffer))
+			if (pNewValue->Parse(pString, oTempBuffer) == false)
 			{
 				oValue.m_pAllocator->DeleteJsonValue(pNewValue, oValue.m_pAllocator->pUserData);
 
