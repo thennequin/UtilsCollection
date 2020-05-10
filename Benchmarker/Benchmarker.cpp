@@ -321,21 +321,28 @@ void Benchmarker_Versus_End()
 		}
 
 		Benchmarker_LogInfo("\n");
+		Benchmarker_LogInfo("End Versus \"%s\"", s_oBenchmarker_Versus.pName);
+		if (s_oBenchmarker_Versus.pArg != NULL)
+		{
+			Benchmarker_LogInfo(" with \"%s\"", s_oBenchmarker_Versus.pArg);
+		}
+		Benchmarker_LogInfo("\n");
+
 		char pBuffer[256];
 		if (pBestAverage != NULL)
 		{
 			Benchmarker_GetReadableTime(iBestAverage, pBuffer, 256);
-			Benchmarker_LogInfo("Best Average : \"%s\" : %s\n", pBestAverage, pBuffer);
+			Benchmarker_LogInfo("  Best Average : \"%s\" : %s\n", pBestAverage, pBuffer);
 		}
 		if (pBestMin != NULL)
 		{
 			Benchmarker_GetReadableTime(iBestMin, pBuffer, 256);
-			Benchmarker_LogInfo("Best Min : \"%s\" : %s\n", pBestMin, pBuffer);
+			Benchmarker_LogInfo("  Best Min     : \"%s\" : %s\n", pBestMin, pBuffer);
 		}
 		if (pBestMax != NULL)
 		{
 			Benchmarker_GetReadableTime(iBestMax, pBuffer, 256);
-			Benchmarker_LogInfo("Best Max : \"%s\" : %s\n", pBestMax, pBuffer);
+			Benchmarker_LogInfo("  Best Max     : \"%s\" : %s\n", pBestMax, pBuffer);
 		}
 		Benchmarker_LogInfo("\n");
 	}
