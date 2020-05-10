@@ -8,7 +8,7 @@
 #define BEGIN_TEST_SUITE(SuiteName) Benchmarker_Suite_Begin(SuiteName); do{
 #define END_TEST_SUITE() } while(0); Benchmarker_Suite_End();
 #define CHECK(Test) Benchmarker_Test(#Test, (Test));
-#define CHECK_TRY(Test) { bool __bTest = true; try { (Test); }catch(...){__bTest = false;}; Benchmarker_Test(#Test, __bTest);
+#define CHECK_TRY(Test) { bool __bTest = true; try { (Test); }catch(...){__bTest = false;}; Benchmarker_Test(#Test, __bTest); }
 #define CHECK_FATAL(Test) if (Benchmarker_Test(#Test, (Test)) == false) break;
 #define CHECK_EQUALITY(ValueLeft, ValueRight) Benchmarker_Test(#ValueLeft " == " #ValueRight, (ValueLeft) == (ValueRight));
 
