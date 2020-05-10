@@ -361,7 +361,7 @@ namespace JsonStthm
 		return -1;
 	}
 
-	void JsonValue::Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact)
+	void JsonValue::Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact) const
 	{
 		if (m_eType == E_TYPE_OBJECT)
 		{
@@ -492,7 +492,7 @@ namespace JsonStthm
 	}
 
 #ifdef JsonStthmString
-	void JsonValue::WriteString(JsonStthmString& sOutJson, bool bCompact)
+	void JsonValue::WriteString(JsonStthmString& sOutJson, bool bCompact) const
 	{
 		Internal::CharBuffer oBuffer;
 		Write(oBuffer, 0, bCompact);
@@ -501,7 +501,7 @@ namespace JsonStthm
 	}
 #endif //JsonStthmString
 
-	char* JsonValue::WriteString(bool bCompact)
+	char* JsonValue::WriteString(bool bCompact) const
 	{
 		Internal::CharBuffer oBuffer;
 		Write(oBuffer, 0, bCompact);
@@ -513,7 +513,7 @@ namespace JsonStthm
 		return pString;
 	}
 
-	bool JsonValue::WriteFile(const char* pFilename, bool bCompact)
+	bool JsonValue::WriteFile(const char* pFilename, bool bCompact) const
 	{
 		FILE* pFile = fopen(pFilename, "w");
 		if (NULL != pFile)

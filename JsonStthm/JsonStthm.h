@@ -206,12 +206,12 @@ namespace JsonStthm
 		int					ReadString(const char* pJson);
 		int					ReadFile(const char* pFilename);
 
-		void				Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact);
+		void				Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact) const;
 #ifdef JsonStthmString
-		void				WriteString(JsonStthmString& sOutJson, bool bCompact = false);
+		void				WriteString(JsonStthmString& sOutJson, bool bCompact = false) const;
 #endif //JsonStthmString
-		char*				WriteString(bool bCompact);
-		bool				WriteFile(const char* pFilename, bool bCompact = false);
+		char*				WriteString(bool bCompact) const;
+		bool				WriteFile(const char* pFilename, bool bCompact = false) const;
 
 		int					GetMemberCount() const;
 
