@@ -1145,7 +1145,7 @@ namespace JsonStthm
 			{
 				if (*pString == '\\')
 				{
-					int iCharLen = ReadSpecialChar(++pString, pNewString);
+					int iCharLen = ReadSpecialChar(++pString, pNewStringCursor);
 					if (iCharLen == 0)
 						return NULL;
 					pNewStringCursor += iCharLen;
