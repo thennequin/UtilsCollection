@@ -1124,10 +1124,6 @@ namespace JsonStthm
 					++pCursor;
 					break;
 				}
-				else if (*pCursor < ' ' || *pCursor == '\x7F')
-				{
-					return NULL;
-				}
 
 				++iLen;
 				++pCursor;
