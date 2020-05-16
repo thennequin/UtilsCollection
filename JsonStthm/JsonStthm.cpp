@@ -1618,4 +1618,16 @@ namespace JsonStthm
 	{
 		// Do nothing
 	}
+
+	size_t JsonDoc::MemoryUsage() const
+	{
+		Block* pBlock = m_pLastBlock;
+		size_t iSize = 0;
+		while (pBlock != NULL)
+		{
+			iSize += (pBlock->m_iUsed > m_iBlockSize) ? pBlock->m_iUsed : m_iBlockSize;
+			pBlock = pBlock->m_pPrevious;
+		}
+		return iSize;
+	}
 }

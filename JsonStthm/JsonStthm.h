@@ -312,6 +312,8 @@ namespace JsonStthm
 
 		int					ReadString(const char* pJson);
 		int					ReadFile(const char* pFilename);
+
+		size_t				MemoryUsage() const;
 	protected:
 		Allocator			m_oAllocator;
 		JsonValue			m_oRoot;
