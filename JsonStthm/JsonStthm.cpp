@@ -1050,13 +1050,6 @@ namespace JsonStthm
 
 	// Static functions
 
-	JsonValue JsonValue::CreateConst()
-	{
-		JsonValue oValue;
-		oValue.m_bConst = true;
-		return oValue;
-	}
-
 	int JsonValue::ReadSpecialChar(const char*& pString, char* pOut)
 	{
 		if (*pString == 'n')		{ pOut[0] = '\n';	return 1; }
