@@ -262,7 +262,6 @@ namespace JsonStthm
 
 		Allocator*			m_pAllocator;
 
-		bool				m_bConst;
 		EType				m_eType;
 		char*				m_pName;
 		JsonValue*			m_pNext;
@@ -285,8 +284,6 @@ namespace JsonStthm
 		ValueUnion			m_oValue;
 
 		bool				Parse(const char*& pString);
-
-		static JsonValue	CreateConst();
 
 		static inline int	ReadSpecialChar(const char*& pString, char* pOut);
 		static inline char*	ReadStringValue(const char*& pString, Allocator* pAllocator);

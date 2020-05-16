@@ -133,7 +133,7 @@ namespace JsonStthm
 	// JsonValue
 	//////////////////////////////
 
-	JsonValue JsonValue::INVALID = JsonValue::CreateConst();
+	JsonValue JsonValue::INVALID;
 
 	inline void JsonValue::ExplicitCtor(void* pMemory, Allocator* pAllocator)
 	{
@@ -148,9 +148,8 @@ namespace JsonStthm
 		NULL
 	};
 
-	JsonValue::JsonValue(Allocator* pAlloocator)
-		: m_pAllocator(pAlloocator)
-		, m_bConst(false)
+	JsonValue::JsonValue(Allocator* pAllocator)
+		: m_pAllocator(pAllocator)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -160,7 +159,6 @@ namespace JsonStthm
 
 	JsonValue::JsonValue()
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -169,18 +167,15 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(const JsonValue& oSource)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
 	{
-		m_bConst = oSource.m_bConst;
 		*this = oSource;
 	}
 
 	JsonValue::JsonValue(bool bValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -191,7 +186,6 @@ namespace JsonStthm
 #ifdef JsonStthmString
 	JsonValue::JsonValue(const JsonStthmString& sValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -202,7 +196,6 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(const char* pValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -212,7 +205,6 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(int64_t iValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -222,7 +214,6 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(double fValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_bConst(false)
 		, m_eType(E_TYPE_INVALID)
 		, m_pName(NULL)
 		, m_pNext(NULL)
@@ -577,49 +568,49 @@ namespace JsonStthm
 
 	void JsonValue::SetString(const char* pValue)
 	{
-		JsonStthmAssert(m_bConst == false);
-		if (m_bConst == false)
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return;
+
+		if (NULL != pValue)
 		{
-			if (NULL != pValue)
-			{
-				InitType(E_TYPE_STRING);
-				SetStringValue(pValue);
-			}
-			else
-			{
-				InitType(E_TYPE_INVALID);
-			}
+			InitType(E_TYPE_STRING);
+			SetStringValue(pValue);
+		}
+		else
+		{
+			InitType(E_TYPE_INVALID);
 		}
 	}
 
 	void JsonValue::SetBoolean(bool bValue)
 	{
-		JsonStthmAssert(m_bConst == false);
-		if (m_bConst == false)
-		{
-			InitType(E_TYPE_BOOLEAN);
-			m_oValue.Boolean = bValue;
-		}
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return;
+
+		InitType(E_TYPE_BOOLEAN);
+		m_oValue.Boolean = bValue;
 	}
 
 	void JsonValue::SetInteger(int64_t iValue)
 	{
-		JsonStthmAssert(m_bConst == false);
-		if (m_bConst == false)
-		{
-			InitType(E_TYPE_INTEGER);
-			m_oValue.Integer = iValue;
-		}
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return;
+
+		InitType(E_TYPE_INTEGER);
+		m_oValue.Integer = iValue;
 	}
 
 	void JsonValue::SetFloat(double fValue)
 	{
-		JsonStthmAssert(m_bConst == false);
-		if (m_bConst == false)
-		{
-			InitType(E_TYPE_FLOAT);
-			m_oValue.Float = fValue;
-		}
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return;
+
+		InitType(E_TYPE_FLOAT);
+		m_oValue.Float = fValue;
 	}
 
 	bool JsonValue::operator ==(const JsonValue& oRight) const
@@ -706,6 +697,10 @@ namespace JsonStthm
 
 	JsonValue& JsonValue::operator[](const char* pName)
 	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return JsonValue::INVALID;
+
 		if (pName == NULL || pName[0] == 0)
 			return JsonValue::INVALID;
 
@@ -722,23 +717,21 @@ namespace JsonStthm
 					break;
 				pChild = pChild->m_pNext;
 			}
-			if (m_bConst == false)
-			{
-				JsonValue* pNewMember = m_pAllocator->CreateJsonValue(m_pAllocator, m_pAllocator->pUserData);
 
-				size_t iNameLen = strlen(pName) + 1;
-				void* pNewString = m_pAllocator->AllocString(iNameLen, m_pAllocator->pUserData);
-				memcpy(pNewString, (const void*)pName, iNameLen);
-				pNewMember->m_pName = (char*)pNewString;
+			JsonValue* pNewMember = m_pAllocator->CreateJsonValue(m_pAllocator, m_pAllocator->pUserData);
 
-				if (NULL != m_oValue.Childs.m_pLast)
-					m_oValue.Childs.m_pLast->m_pNext = pNewMember;
-				else
-					m_oValue.Childs.m_pFirst = pNewMember;
+			size_t iNameLen = strlen(pName) + 1;
+			void* pNewString = m_pAllocator->AllocString(iNameLen, m_pAllocator->pUserData);
+			memcpy(pNewString, (const void*)pName, iNameLen);
+			pNewMember->m_pName = (char*)pNewString;
 
-				m_oValue.Childs.m_pLast = pNewMember;
-				return *pNewMember;
-			}
+			if (NULL != m_oValue.Childs.m_pLast)
+				m_oValue.Childs.m_pLast->m_pNext = pNewMember;
+			else
+				m_oValue.Childs.m_pFirst = pNewMember;
+
+			m_oValue.Childs.m_pLast = pNewMember;
+			return *pNewMember;
 		}
 		return JsonValue::INVALID;
 	}
@@ -761,6 +754,10 @@ namespace JsonStthm
 
 	JsonValue& JsonValue::operator[](int iIndex)
 	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return JsonValue::INVALID;
+
 		if (m_eType == E_TYPE_INVALID)
 			InitType(E_TYPE_ARRAY);
 		if (m_eType == E_TYPE_OBJECT || m_eType == E_TYPE_ARRAY)
@@ -797,6 +794,10 @@ namespace JsonStthm
 
 	JsonValue& JsonValue::operator =(const JsonValue& oValue)
 	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return JsonValue::INVALID;
+
 		if (oValue.m_eType == E_TYPE_OBJECT)
 		{
 			InitType(E_TYPE_OBJECT);
@@ -865,41 +866,63 @@ namespace JsonStthm
 #ifdef JsonStthmString
 	JsonValue& JsonValue::operator =(const JsonStthmString& sValue)
 	{
-		if (m_bConst == false)
-		{
-			InitType(E_TYPE_STRING);
-			SetStringValue(sValue.c_str());
-		}
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return JsonValue::INVALID;
+
+		InitType(E_TYPE_STRING);
+		SetStringValue(sValue.c_str());
+
 		return *this;
 	}
 #endif //JsonStthmString
 
 	JsonValue& JsonValue::operator =(const char* pValue)
 	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return JsonValue::INVALID;
+
 		SetString(pValue);
 		return *this;
 	}
 
 	JsonValue& JsonValue::operator =(bool bValue)
 	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return JsonValue::INVALID;
+
 		SetBoolean(bValue);
 		return *this;
 	}
 
 	JsonValue& JsonValue::operator =(int64_t iValue)
 	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return JsonValue::INVALID;
+
 		SetInteger(iValue);
 		return *this;
 	}
 
 	JsonValue& JsonValue::operator =(double fValue)
 	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return JsonValue::INVALID;
+
 		SetFloat(fValue);
 		return *this;
 	}
 
 	JsonValue& JsonValue::operator +=(const JsonValue& oValue)
 	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return JsonValue::INVALID;
+
 		if (m_eType == E_TYPE_ARRAY)
 		{
 			JsonValue* pNewValue = new JsonValue(oValue);
@@ -931,6 +954,10 @@ namespace JsonStthm
 
 	bool JsonValue::Parse(const char*& pString)
 	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return false;
+
 		bool bOk = pString != NULL && *pString != 0;
 		while (*pString != 0 && bOk)
 		{
