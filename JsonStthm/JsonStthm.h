@@ -161,7 +161,7 @@ namespace JsonStthm
 	public:
 		enum EType
 		{
-			E_TYPE_INVALID = 0,	//null
+			E_TYPE_NULL = 0,	//null
 			E_TYPE_OBJECT,		//JsonMembers
 			E_TYPE_ARRAY,		//JsonArray
 			E_TYPE_STRING,		//String
@@ -220,16 +220,17 @@ namespace JsonStthm
 
 		const char*			GetName() const { return m_pName; }
 
-		bool				IsNull() const { return m_eType == E_TYPE_INVALID; }
-		bool				IsObject() const { return m_eType == E_TYPE_OBJECT; }
-		bool				IsArray() const { return m_eType == E_TYPE_ARRAY; }
-		bool				IsString() const { return m_eType == E_TYPE_STRING; }
-		bool				IsBoolean() const { return m_eType == E_TYPE_BOOLEAN; }
-		bool				IsInteger() const { return m_eType == E_TYPE_INTEGER; }
-		bool				IsFloat() const { return m_eType == E_TYPE_FLOAT; }
+		bool				IsValid() const		{ return this != &JsonValue::INVALID; }
+		bool				IsNull() const		{ return m_eType == E_TYPE_NULL; }
+		bool				IsObject() const	{ return m_eType == E_TYPE_OBJECT; }
+		bool				IsArray() const		{ return m_eType == E_TYPE_ARRAY; }
+		bool				IsString() const	{ return m_eType == E_TYPE_STRING; }
+		bool				IsBoolean() const	{ return m_eType == E_TYPE_BOOLEAN; }
+		bool				IsInteger() const	{ return m_eType == E_TYPE_INTEGER; }
+		bool				IsFloat() const		{ return m_eType == E_TYPE_FLOAT; }
 
-		bool				IsNumeric() const { return m_eType == E_TYPE_INTEGER || m_eType == E_TYPE_FLOAT; }
-		bool				IsContainer() const { return m_eType == E_TYPE_ARRAY || m_eType == E_TYPE_OBJECT; }
+		bool				IsNumeric() const	{ return m_eType == E_TYPE_INTEGER || m_eType == E_TYPE_FLOAT; }
+		bool				IsContainer() const	{ return m_eType == E_TYPE_ARRAY || m_eType == E_TYPE_OBJECT; }
 
 		const char*			ToString() const;
 		bool				ToBoolean() const;

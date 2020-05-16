@@ -150,7 +150,7 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(Allocator* pAllocator)
 		: m_pAllocator(pAllocator)
-		, m_eType(E_TYPE_INVALID)
+		, m_eType(E_TYPE_NULL)
 		, m_pName(NULL)
 		, m_pNext(NULL)
 	{
@@ -159,7 +159,7 @@ namespace JsonStthm
 
 	JsonValue::JsonValue()
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_eType(E_TYPE_INVALID)
+		, m_eType(E_TYPE_NULL)
 		, m_pName(NULL)
 		, m_pNext(NULL)
 	{
@@ -167,7 +167,7 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(const JsonValue& oSource)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_eType(E_TYPE_INVALID)
+		, m_eType(E_TYPE_NULL)
 		, m_pName(NULL)
 		, m_pNext(NULL)
 	{
@@ -176,7 +176,7 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(bool bValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_eType(E_TYPE_INVALID)
+		, m_eType(E_TYPE_NULL)
 		, m_pName(NULL)
 		, m_pNext(NULL)
 	{
@@ -186,7 +186,7 @@ namespace JsonStthm
 #ifdef JsonStthmString
 	JsonValue::JsonValue(const JsonStthmString& sValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_eType(E_TYPE_INVALID)
+		, m_eType(E_TYPE_NULL)
 		, m_pName(NULL)
 		, m_pNext(NULL)
 	{
@@ -196,7 +196,7 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(const char* pValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_eType(E_TYPE_INVALID)
+		, m_eType(E_TYPE_NULL)
 		, m_pName(NULL)
 		, m_pNext(NULL)
 	{
@@ -205,7 +205,7 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(int64_t iValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_eType(E_TYPE_INVALID)
+		, m_eType(E_TYPE_NULL)
 		, m_pName(NULL)
 		, m_pNext(NULL)
 	{
@@ -214,7 +214,7 @@ namespace JsonStthm
 
 	JsonValue::JsonValue(double fValue)
 		: m_pAllocator(&s_oDefaultAllocator)
-		, m_eType(E_TYPE_INVALID)
+		, m_eType(E_TYPE_NULL)
 		, m_pName(NULL)
 		, m_pNext(NULL)
 	{
@@ -279,7 +279,7 @@ namespace JsonStthm
 		default:
 			break;
 		}
-		m_eType = E_TYPE_INVALID;
+		m_eType = E_TYPE_NULL;
 	}
 
 	JsonValue::EType JsonValue::GetType() const
@@ -579,7 +579,7 @@ namespace JsonStthm
 		}
 		else
 		{
-			InitType(E_TYPE_INVALID);
+			InitType(E_TYPE_NULL);
 		}
 	}
 
@@ -620,7 +620,7 @@ namespace JsonStthm
 
 		switch (m_eType)
 		{
-		case E_TYPE_INVALID:
+		case E_TYPE_NULL:
 			break;
 		case E_TYPE_OBJECT:
 		{
@@ -704,7 +704,7 @@ namespace JsonStthm
 		if (pName == NULL || pName[0] == 0)
 			return JsonValue::INVALID;
 
-		if (m_eType == E_TYPE_INVALID)
+		if (m_eType == E_TYPE_NULL)
 			InitType(E_TYPE_OBJECT);
 		if (m_eType == E_TYPE_OBJECT)
 		{
@@ -758,7 +758,7 @@ namespace JsonStthm
 		if (this == &JsonStthm::JsonValue::INVALID)
 			return JsonValue::INVALID;
 
-		if (m_eType == E_TYPE_INVALID)
+		if (m_eType == E_TYPE_NULL)
 			InitType(E_TYPE_ARRAY);
 		if (m_eType == E_TYPE_OBJECT || m_eType == E_TYPE_ARRAY)
 		{
@@ -1019,7 +1019,7 @@ namespace JsonStthm
 			else if (memcmp(pString, "null", 4) == 0)
 			{
 				pString += 4;
-				InitType(E_TYPE_INVALID);
+				InitType(E_TYPE_NULL);
 				break;
 			}
 			else if (*pString == '{')
@@ -1532,7 +1532,7 @@ namespace JsonStthm
 
 	void JsonDoc::Clear()
 	{
-		m_oRoot.m_eType = JsonValue::E_TYPE_INVALID;
+		m_oRoot.m_eType = JsonValue::E_TYPE_NULL;
 		Block* pBlock = m_pLastBlock;
 		while (pBlock != NULL)
 		{
