@@ -973,25 +973,27 @@ namespace JsonStthm
 
 				InitType(E_TYPE_STRING);
 				m_oValue.String = pValue;
-
 				break;
 			}
 			else if (memcmp(pString, "NaN", 3) == 0)
 			{
 				pString += 3;
-				*this = Internal::c_fNaN;
+				InitType(E_TYPE_FLOAT);
+				m_oValue.Float = Internal::c_fNaN;
 				break;
 			}
 			else if (memcmp(pString, "-Infinity", 9) == 0)
 			{
 				pString += 9;
-				*this = -Internal::c_fInfinity;
+				InitType(E_TYPE_FLOAT);
+				m_oValue.Float = -Internal::c_fInfinity;
 				break;
 			}
 			else if (memcmp(pString, "Infinity", 8) == 0)
 			{
 				pString += 8;
-				*this = Internal::c_fInfinity;
+				InitType(E_TYPE_FLOAT);
+				m_oValue.Float = Internal::c_fInfinity;
 				break;
 			}
 			else if (Internal::IsDigit(*pString) || *pString == '-')
@@ -1003,13 +1005,15 @@ namespace JsonStthm
 			else if (memcmp(pString, "true", 4) == 0)
 			{
 				pString += 4;
-				*this = true;
+				InitType(E_TYPE_BOOLEAN);
+				m_oValue.Boolean = true;
 				break;
 			}
 			else if (memcmp(pString, "false", 5) == 0)
 			{
 				pString += 5;
-				*this = false;
+				InitType(E_TYPE_BOOLEAN);
+				m_oValue.Boolean = false;
 				break;
 			}
 			else if (memcmp(pString, "null", 4) == 0)
@@ -1259,12 +1263,14 @@ namespace JsonStthm
 		if( pEndDouble > pEndLong )
 		{
 			pString = pEndDouble;
-			oValue = fValue;
+			oValue.InitType(E_TYPE_FLOAT);
+			oValue.m_oValue.Float = fValue;
 		}
 		else
 		{
 			pString = pEndLong;
-			oValue = iValue;
+			oValue.InitType(E_TYPE_INTEGER);
+			oValue.m_oValue.Integer= iValue;
 		}
 
 		return true;
