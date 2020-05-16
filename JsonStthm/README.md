@@ -9,6 +9,10 @@ Fast Json reader/writer
 
 JsonStthm::JsonValue oJson;
 oJson.ReadFile("data.json");
+
+// Or (faster but read only)
+JsonStthm::JsonDoc oJson;
+oJson.ReadFile("data.json");
 ```
 
 ### Create json
