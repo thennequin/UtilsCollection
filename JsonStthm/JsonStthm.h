@@ -21,6 +21,9 @@ namespace JsonStthm
 
 	namespace Internal
 	{
+		bool IsNaN(double x);
+		bool IsInfinite(double x);
+
 		template <typename T, size_t HeapSize = 1024>
 		struct Buffer
 		{
