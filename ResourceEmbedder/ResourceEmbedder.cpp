@@ -1,14 +1,16 @@
 // Convert folder with binary data to cpp data
 
-#include <stdio.h>
-#include <string>
-#include <algorithm>
-#include <direct.h>
-#include <vector>
-#include <limits.h>
+#include <stdio.h> // printf
+#include <stdint.h> // uint64_t
 #include <stdlib.h>
 
+#include <string>
+#include <vector>
+#include <algorithm>
+
 #include <assert.h>
+
+#include <direct.h> //_mkdir
 
 #include "tinydir.h"
 #include "lz4hc.h"
@@ -20,6 +22,13 @@ enum ECompressMode
 	E_COMPRESS_MODE_LZ4,
 	E_COMPRESS_MODE_LZ4HC,
 	E_COMPRESS_MODE_ZSTD,
+};
+
+enum EOutputMode
+{
+	E_OUTPUT_MODE_8,
+	E_OUTPUT_MODE_32_LE,
+	E_OUTPUT_MODE_32_BE
 };
 
 void ReplaceAll(std::string& str, const std::string& from, const std::string& to)
@@ -82,7 +91,7 @@ void PrintRow(FILE* dst, const unsigned char* buf, unsigned count)
 		fprintf(dst, "0x%02X", *buf);
 }
 
-void ExportFile(const char* pName, const char* pInputFilename, const char* pOutputFilename, const char* pRelativePath, ECompressMode eCompressMode)
+void ExportFile(const char* pName, const char* pInputFilename, const char* pOutputFilename, const char* pRelativePath, ECompressMode eCompressMode, EOutputMode eOutputMode)
 {
 	printf("Converting file %s\n", pInputFilename);
 
@@ -90,8 +99,8 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 
 	assert(NULL != pOriginFile);
 
-	unsigned int iOriginSize;
-	unsigned int iCompressedSize = 0;
+	uint64_t iOriginSize;
+	uint64_t iCompressedSize = 0;
 
 	fseek(pOriginFile, 0, SEEK_END);
 	iOriginSize = (unsigned int)ftell(pOriginFile);
@@ -109,11 +118,11 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 
 	if (eCompressMode == E_COMPRESS_MODE_LZ4)
 	{
-		int iCompressBound = LZ4_compressBound(iOriginSize);
+		int iCompressBound = LZ4_compressBound((int)iOriginSize);
 		if (iCompressBound > 0)
 		{
 			char* pCompressed = (char*)malloc(iCompressBound);
-			iCompressedSize = LZ4_compress_default(pData, pCompressed, iOriginSize, iCompressBound);
+			iCompressedSize = (uint64_t)LZ4_compress_default(pData, pCompressed, (int)iOriginSize, iCompressBound);
 
 			if (iCompressedSize >= iOriginSize)
 			{
@@ -130,11 +139,11 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	}
 	else if (eCompressMode == E_COMPRESS_MODE_LZ4HC)
 	{
-		int iCompressBound = LZ4_compressBound(iOriginSize);
+		int iCompressBound = LZ4_compressBound((int)iOriginSize);
 		if (iCompressBound > 0)
 		{
 			char* pCompressed = (char*)malloc(iCompressBound);
-			iCompressedSize = LZ4_compress_HC(pData, pCompressed, iOriginSize, iCompressBound, 5);
+			iCompressedSize = (uint64_t)LZ4_compress_HC(pData, pCompressed, (int)iOriginSize, iCompressBound, 5);
 
 			if (iCompressedSize >= iOriginSize)
 			{
@@ -151,11 +160,11 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	}
 	else if (eCompressMode == E_COMPRESS_MODE_ZSTD)
 	{
-		int iCompressBound = ZSTD_compressBound(iOriginSize);
+		size_t iCompressBound = ZSTD_compressBound((size_t)iOriginSize);
 		if (iCompressBound > 0)
 		{
 			char* pCompressed = (char*)malloc(iCompressBound);
-			iCompressedSize = ZSTD_compress(pCompressed, iCompressBound, pData, iOriginSize, 11);
+			iCompressedSize = (uint64_t)ZSTD_compress(pCompressed, iCompressBound, pData, (size_t)iOriginSize, 11);
 
 			if (iCompressedSize >= iOriginSize)
 			{
@@ -244,36 +253,95 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 			fprintf(pSourceFile, "%s// Compressed with ZSTD_compress level 11\n", sIndentP.c_str());
 		}
 
-		fprintf(pHeaderFile, "%s extern const unsigned int Size;\n", sIndentP.c_str());
-		fprintf(pHeaderFile, "%s extern const unsigned int CompressedSize;\n", sIndentP.c_str());
-		fprintf(pHeaderFile, "%s extern const char CompressedData[];\n", sIndentP.c_str());
+		if (eOutputMode != E_OUTPUT_MODE_8)
+		{
+			fprintf(pHeaderFile, "%s extern const bool BigEndian;\n", sIndentP.c_str());
+		}
+		fprintf(pHeaderFile, "%s extern const unsigned long long Size;\n", sIndentP.c_str());
+		fprintf(pHeaderFile, "%s extern const unsigned long long CompressedSize;\n", sIndentP.c_str());
+		fprintf(pHeaderFile, "%s extern const char* CompressedData;\n", sIndentP.c_str());
 
-		fprintf(pSourceFile, "%sconst unsigned int Size = %d;\n", sIndentP.c_str(), iOriginSize);
-		fprintf(pSourceFile, "%sconst unsigned int CompressedSize = %d;\n", sIndentP.c_str(), iCompressedSize);
-		fprintf(pSourceFile, "%sconst char CompressedData[] = {", sIndentP.c_str());
+		if (eOutputMode != E_OUTPUT_MODE_8)
+		{
+			fprintf(pSourceFile, "%sconst bool BigEndian = %s;\n", sIndentP.c_str(), (eOutputMode == E_OUTPUT_MODE_32_BE) ? "true" : "false");
+		}
+		fprintf(pSourceFile, "%sconst unsigned long long Size = %zu;\n", sIndentP.c_str(), iOriginSize);
+		fprintf(pSourceFile, "%sconst unsigned long long CompressedSize = %zu;\n", sIndentP.c_str(), iCompressedSize);
+		if (eOutputMode == E_OUTPUT_MODE_8)
+		{
+			fprintf(pSourceFile, "%sconst char CompressedDataArray[] = {", sIndentP.c_str());
+		}
+		else
+		{
+			fprintf(pSourceFile, "%sconst uint32_t CompressedDataArray[] = {", sIndentP.c_str());
+		}
 	}
 	else
 	{
-		fprintf(pHeaderFile, "%s extern const unsigned int Size;\n", sIndentP.c_str());
-		fprintf(pHeaderFile, "%s extern const char Data[];\n", sIndentP.c_str());
+		if (eOutputMode != E_OUTPUT_MODE_8)
+		{
+			fprintf(pHeaderFile, "%s extern const bool BigEndian;\n", sIndentP.c_str());
+		}
+		fprintf(pHeaderFile, "%s extern const unsigned long long Size;\n", sIndentP.c_str());
+		fprintf(pHeaderFile, "%s extern const char* Data;\n", sIndentP.c_str());
 
-		fprintf(pSourceFile, "%sconst unsigned int Size = %d;\n", sIndentP.c_str(), iOriginSize);
-		fprintf(pSourceFile, "%sconst char Data[] = {", sIndentP.c_str());
+		if (eOutputMode != E_OUTPUT_MODE_8)
+		{
+			fprintf(pSourceFile, "%sconst bool BigEndian = %s;\n", sIndentP.c_str(), (eOutputMode == E_OUTPUT_MODE_32_BE) ? "true" : "false");
+		}
+		fprintf(pSourceFile, "%sconst unsigned long long Size = %zu;\n", sIndentP.c_str(), iOriginSize);
+		if (eOutputMode == E_OUTPUT_MODE_8)
+		{
+			fprintf(pSourceFile, "%sconst char DataArray[] = {", sIndentP.c_str());
+		}
+		else
+		{
+			fprintf(pSourceFile, "%sconst uint32_t DataArray[] = {", sIndentP.c_str());
+		}
 	}
 
-	unsigned int iSize = (eCompressMode != E_COMPRESS_MODE_NONE) ? iCompressedSize : iOriginSize;
-	for (size_t iPos = 0; iPos < iSize; ++iPos)
+	size_t iSize = (eCompressMode != E_COMPRESS_MODE_NONE) ? iCompressedSize : iOriginSize;
+	const int iStep = (eOutputMode == E_OUTPUT_MODE_8) ? 1 : 4;
+	const int iModulo = (eOutputMode == E_OUTPUT_MODE_8) ? 16 : 32;
+	const char* pFormat = (eOutputMode == E_OUTPUT_MODE_8) ? "0x%02X" : "0x%08X";
+
+	for (size_t iPos = 0; iPos < iSize; iPos += iStep)
 	{
-		if (iPos % 16 == 0)
+		if (iPos % iModulo == 0)
 		{
 			fprintf(pSourceFile, "\n%s", sIndentPP.c_str());
 		}
-		fprintf(pSourceFile, "0x%02X", (unsigned char)*(pData + iPos));
-		if (iPos < (iSize - 1))
+
+		uint32_t iValue = 0;
+		for (int iOffset = 0; iOffset < iStep && (iPos + iOffset) < iSize; ++iOffset)
+		{
+			if (eOutputMode == E_OUTPUT_MODE_32_BE)
+			{
+				((unsigned char*)&iValue)[iOffset] = *(pData + iPos + iOffset);
+			}
+			else
+			{
+				((unsigned char*)&iValue)[iOffset] = *(pData + iPos + (3 - iOffset));
+			}
+		}
+
+		if (iPos > 0 && (iPos % iModulo) != 0)
+			fprintf(pSourceFile, " ");
+		fprintf(pSourceFile, pFormat, iValue);
+		if (iPos < (iSize - iStep))
 			fprintf(pSourceFile, ",");
 	}
 
 	fprintf(pSourceFile, "\n%s};\n", sIndentP.c_str());
+
+	if (eCompressMode != E_COMPRESS_MODE_NONE)
+	{
+		fprintf(pSourceFile, "%sconst char* CompressedData = (const char*)CompressedDataArray;\n", sIndentP.c_str());
+	}
+	else
+	{
+		fprintf(pSourceFile, "%sconst char* Data = (const char*)DataArray;\n", sIndentP.c_str());
+	}
 
 	//Closing namespaces
 	fprintf(pHeaderFile, "%s}\n", sIndent.c_str());
@@ -294,7 +362,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	free(pData);
 }
 
-void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const char* pOutputRelative, ECompressMode eCompressMode)
+void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const char* pOutputRelative, ECompressMode eCompressMode, EOutputMode eOutputMode)
 {
 	printf("Scanning folder %s\n", pInputFolder);
 
@@ -325,7 +393,7 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 					sOutRelative += "/";
 				}
 				sOutRelative += file.name;
-				ScanFolder(file.path, pOutputFolderBase, sOutRelative.c_str(), eCompressMode);
+				ScanFolder(file.path, pOutputFolderBase, sOutRelative.c_str(), eCompressMode, eOutputMode);
 			}
 		}
 		else
@@ -341,7 +409,7 @@ void ScanFolder(const char* pInputFolder, const char* pOutputFolderBase, const c
 			ReplaceSpecialsChars(sName);
 			sOutPath += sName;
 
-			ExportFile(file.name, file.path, sOutPath.c_str(), pOutputRelative, eCompressMode);
+			ExportFile(file.name, file.path, sOutPath.c_str(), pOutputRelative, eCompressMode, eOutputMode);
 		}
 
 		tinydir_next(&dir);
@@ -355,6 +423,7 @@ void main(int argn, char** argv)
 	const char* pInputFolder = NULL;
 	const char* pOutputFolder = NULL;
 	ECompressMode eCompressMode = E_COMPRESS_MODE_NONE;
+	EOutputMode eOutputMode = E_OUTPUT_MODE_8;
 
 	int iArg = 1;
 	while (iArg < argn)
@@ -380,7 +449,35 @@ void main(int argn, char** argv)
 			}
 			else
 			{
-				printf("Invalid compress mode '%s' for argument -c=<mode>", pMode);
+				printf("Invalid compress mode '%s' for argument -c=<algorithm>", pMode);
+				return;
+			}
+		}
+		else if (strncmp(argv[iArg], "-m=", 3) == 0)
+		{
+			const char* pMode = argv[iArg] + 3;
+			if (strcmp(pMode, "8") == 0)
+			{
+				eOutputMode = E_OUTPUT_MODE_8;
+			}
+			else if (strcmp(pMode, "32") == 0)
+			{
+				const unsigned char c_pValueUChar[4] = { 0xFF, 0xAA, 0x88, 0x33 };
+				const uint32_t c_pValueUInt32 = 0x3388AAFF;
+				const bool c_bIsLittleEndian = (*(uint32_t*)c_pValueUChar) == c_pValueUInt32;
+				eOutputMode = c_bIsLittleEndian ? E_OUTPUT_MODE_32_LE : E_OUTPUT_MODE_32_BE;
+			}
+			else if (strcmp(pMode, "32le") == 0)
+			{
+				eOutputMode = E_OUTPUT_MODE_32_LE;
+			}
+			else if (strcmp(pMode, "32be") == 0)
+			{
+				eOutputMode = E_OUTPUT_MODE_32_BE;
+			}
+			else
+			{
+				printf("Invalid output mode '%s' for argument -m=<mode>", pMode);
 				return;
 			}
 		}
@@ -403,16 +500,21 @@ void main(int argn, char** argv)
 
 	if (pInputFolder != NULL && pOutputFolder != NULL)
 	{
-		ScanFolder(pInputFolder, pOutputFolder, NULL, eCompressMode);
+		ScanFolder(pInputFolder, pOutputFolder, NULL, eCompressMode, eOutputMode);
 	}
 	else
 	{
 		printf("Usage: ResourceEmbedder <input resource folder> <output cpp folder>\n");
 		printf("  --c              : compress files with LZ4\n");
 		printf("  --c=<algorithm>  : compress files with specific compression algorithms\n");
-		printf("                      - lz4 : LZ4 (default)\n");
+		printf("                      - lz4   : LZ4 (default)\n");
 		printf("                      - lz4hc : LZ4 High Compression (level 5)\n");
-		printf("                      - zstd : Facebook Zstd (level 11)\n");
+		printf("                      - zstd  : Facebook Zstd (level 11)\n");
+		printf("  --m=<mode>       : storage output mode\n");
+		printf("                      - 8     : 8 bits char (default)\n");
+		printf("                      - 32    : 32 bits unsigned int32 auto detect Endianness\n");
+		printf("                      - 32le  : 32 bits unsigned int32 Little Endian\n");
+		printf("                      - 32be  : 32 bits unsigned int32 Big Endian\n");
 	}
 
 	//LeakTrackerShutdown();
