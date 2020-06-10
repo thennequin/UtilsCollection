@@ -170,7 +170,7 @@ namespace JsonStthm
 			E_TYPE_FLOAT		//double
 		};
 
-		class Iterator
+		class STTHM_API Iterator
 		{
 		public:
 			Iterator(const JsonValue* pJson);
