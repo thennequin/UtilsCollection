@@ -500,6 +500,7 @@ namespace JsonStthm
 		if (pString != NULL)
 		{
 			oBuffer.WriteTo(pString);
+			pString[oBuffer.Size()] = '\0';
 		}
 		return pString;
 	}
