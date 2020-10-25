@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="JsonStthm::JsonValue">
+		<DisplayString Condition="m_eType == JsonStthm::JsonValue::E_TYPE_NULL">(NULL)</DisplayString>
+		<DisplayString Condition="m_eType == JsonStthm::JsonValue::E_TYPE_OBJECT">(Object)</DisplayString>
+		<DisplayString Condition="m_eType == JsonStthm::JsonValue::E_TYPE_ARRAY">(Array) </DisplayString>
+		<DisplayString Condition="m_eType == JsonStthm::JsonValue::E_TYPE_STRING">(String): {m_oValue.String,s}</DisplayString>
+		<DisplayString Condition="m_eType == JsonStthm::JsonValue::E_TYPE_BOOLEAN">(Boolean): {m_oValue.Boolean}</DisplayString>
+		<DisplayString Condition="m_eType == JsonStthm::JsonValue::E_TYPE_INTEGER">(Integer): {m_oValue.Integer}</DisplayString>
+		<DisplayString Condition="m_eType == JsonStthm::JsonValue::E_TYPE_FLOAT">(Float): {m_oValue.Float}</DisplayString>
+
+		<StringView Condition="m_eType == JsonStthm::JsonValue::E_TYPE_STRING">m_oValue.String</StringView>
+
+		<Expand>
+			<LinkedListItems Condition="m_eType == JsonStthm::JsonValue::E_TYPE_OBJECT">
+				<HeadPointer>m_oValue.Childs.m_pFirst</HeadPointer>
+				<NextPointer>m_pNext</NextPointer>
+				<ValueNode Name="{(*this).m_pName,s}">*this</ValueNode>
+			</LinkedListItems>
+
+			<LinkedListItems Condition="m_eType == JsonStthm::JsonValue::E_TYPE_ARRAY">
+				<HeadPointer>m_oValue.Childs.m_pFirst</HeadPointer>
+				<NextPointer>m_pNext</NextPointer>
+				<ValueNode>*this</ValueNode>
+			</LinkedListItems>
+		</Expand>
+	</Type>
+</AutoVisualizer>
