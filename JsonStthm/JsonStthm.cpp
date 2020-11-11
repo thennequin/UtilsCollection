@@ -35,7 +35,8 @@ namespace JsonStthm
 				|| memcmp(&c_fNegativeInfinity, &x, sizeof(double)) == 0;
 		}
 
-		bool IsSpace(char cChar) {
+		bool IsSpace(char cChar)
+		{
 			return cChar == ' ' || (cChar >= '\t' && cChar <= '\r');
 		}
 
@@ -305,7 +306,6 @@ namespace JsonStthm
 	{
 		if (pJson != NULL)
 		{
-			Internal::CharBuffer oTempBuffer;
 			Reset();
 			const char* pEnd = pJson;
 			if (Parse(pEnd) == false)
@@ -341,6 +341,12 @@ namespace JsonStthm
 			fseek(pFile, 0, SEEK_SET);
 
 			char* pString = (char*)JsonStthmMalloc(iSize);
+			if (pString == NULL)
+			{
+				fclose(pFile);
+				return -2;
+			}
+
 			fread(pString, 1, iSize, pFile);
 			fclose(pFile);
 
@@ -352,7 +358,7 @@ namespace JsonStthm
 		return -1;
 	}
 
-	void JsonValue::Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact) const
+	void JsonValue::Write(Internal::CharBuffer& sOutJson, size_t iIndent, bool bCompact) const
 	{
 		if (m_eType == E_TYPE_OBJECT)
 		{
@@ -956,97 +962,84 @@ namespace JsonStthm
 	bool JsonValue::Parse(const char*& pString)
 	{
 		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
-		if (this == &JsonStthm::JsonValue::INVALID)
+		if (this == &JsonStthm::JsonValue::INVALID || pString == NULL)
 			return false;
 
-		bool bOk = pString != NULL && *pString != 0;
-		while (*pString != 0 && bOk)
+		Internal::SkipSpaces(pString);
+		if (*pString == 0)
 		{
-			while (Internal::IsSpace(*pString)) ++pString;
-			if (*pString == '"')
-			{
-				char* pValue = ReadStringValue(++pString, m_pAllocator);
-				if (pValue == NULL)
-				{
-					bOk = false;
-					break;
-				}
-
-				InitType(E_TYPE_STRING);
-				m_oValue.String = pValue;
-				break;
-			}
-			else if (memcmp(pString, "NaN", 3) == 0)
-			{
-				pString += 3;
-				InitType(E_TYPE_FLOAT);
-				m_oValue.Float = Internal::c_fNaN;
-				break;
-			}
-			else if (memcmp(pString, "-Infinity", 9) == 0)
-			{
-				pString += 9;
-				InitType(E_TYPE_FLOAT);
-				m_oValue.Float = -Internal::c_fInfinity;
-				break;
-			}
-			else if (memcmp(pString, "Infinity", 8) == 0)
-			{
-				pString += 8;
-				InitType(E_TYPE_FLOAT);
-				m_oValue.Float = Internal::c_fInfinity;
-				break;
-			}
-			else if (Internal::IsDigit(*pString) || *pString == '-')
-			{
-				if (ReadNumericValue(pString, *this) == false)
-					bOk = false;
-				break;
-			}
-			else if (memcmp(pString, "true", 4) == 0)
-			{
-				pString += 4;
-				InitType(E_TYPE_BOOLEAN);
-				m_oValue.Boolean = true;
-				break;
-			}
-			else if (memcmp(pString, "false", 5) == 0)
-			{
-				pString += 5;
-				InitType(E_TYPE_BOOLEAN);
-				m_oValue.Boolean = false;
-				break;
-			}
-			else if (memcmp(pString, "null", 4) == 0)
-			{
-				pString += 4;
-				InitType(E_TYPE_NULL);
-				break;
-			}
-			else if (*pString == '{')
-			{
-				++pString;
-				if (ReadObjectValue(pString, *this) == false)
-				{
-					bOk = false;
-				}
-				break;
-			}
-			else if (*pString == '[')
-			{
-				++pString;
-				if (ReadArrayValue(pString, *this) == false)
-					bOk = false;
-				break;
-			}
-			else
-			{
-				//Error
-				bOk = false;
-				break;
-			}
+			return true;
 		}
-		return bOk;
+		else if (*pString == '"')
+		{
+			char* pValue = ReadStringValue(++pString, m_pAllocator);
+			if (pValue == NULL)
+			{
+				return false;
+			}
+
+			InitType(E_TYPE_STRING);
+			m_oValue.String = pValue;
+			return true;
+		}
+		else if (memcmp(pString, "NaN", 3) == 0)
+		{
+			pString += 3;
+			InitType(E_TYPE_FLOAT);
+			m_oValue.Float = Internal::c_fNaN;
+			return true;
+		}
+		else if (memcmp(pString, "-Infinity", 9) == 0)
+		{
+			pString += 9;
+			InitType(E_TYPE_FLOAT);
+			m_oValue.Float = -Internal::c_fInfinity;
+			return true;
+		}
+		else if (memcmp(pString, "Infinity", 8) == 0)
+		{
+			pString += 8;
+			InitType(E_TYPE_FLOAT);
+			m_oValue.Float = Internal::c_fInfinity;
+			return true;
+		}
+		else if (Internal::IsDigit(*pString) || *pString == '-')
+		{
+			return ReadNumericValue(pString, *this);
+		}
+		else if (memcmp(pString, "true", 4) == 0)
+		{
+			pString += 4;
+			InitType(E_TYPE_BOOLEAN);
+			m_oValue.Boolean = true;
+			return true;
+		}
+		else if (memcmp(pString, "false", 5) == 0)
+		{
+			pString += 5;
+			InitType(E_TYPE_BOOLEAN);
+			m_oValue.Boolean = false;
+			return true;
+		}
+		else if (memcmp(pString, "null", 4) == 0)
+		{
+			pString += 4;
+			InitType(E_TYPE_NULL);
+			return true;
+		}
+		else if (*pString == '{')
+		{
+			++pString;
+			return ReadObjectValue(pString, *this);
+		}
+		else if (*pString == '[')
+		{
+			++pString;
+			return ReadArrayValue(pString, *this);
+		}
+
+		// Error
+		return false;
 	}
 
 	// Static functions
@@ -1084,7 +1077,7 @@ namespace JsonStthm
 				for (int i = 0; i < 4; ++i)
 				{
 					if (Internal::IsXDigit(*++pString))
-						iChar2 = iChar2 * 16 + Internal::CharToInt((unsigned char)*pString);
+						iChar2 = iChar2 * 16 + Internal::CharToInt(*pString);
 					else
 						return 0;
 				}

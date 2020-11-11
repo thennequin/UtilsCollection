@@ -209,7 +209,7 @@ namespace JsonStthm
 		int					ReadString(const char* pJson);
 		int					ReadFile(const char* pFilename);
 
-		void				Write(Internal::CharBuffer& sOutJson, int iIndent, bool bCompact) const;
+		void				Write(Internal::CharBuffer& sOutJson, size_t iIndent, bool bCompact) const;
 #ifdef JsonStthmString
 		void				WriteString(JsonStthmString& sOutJson, bool bCompact = false) const;
 #endif //JsonStthmString
