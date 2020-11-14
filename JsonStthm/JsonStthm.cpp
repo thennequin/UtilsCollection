@@ -61,14 +61,6 @@ namespace JsonStthm
 			return c_pXDigitLut[cChar];
 		}
 
-		int	CharToInt(char cChar)
-		{
-			if (cChar <= '9')
-				return cChar - '0';
-			else
-				return (cChar & ~' ') - 'A' + 10;
-		}
-
 		void SkipSpaces(const char*& pString)
 		{
 			while (IsSpace(*pString)) ++pString;
