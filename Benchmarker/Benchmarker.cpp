@@ -157,6 +157,7 @@ void Benchmarker_Suite_End()
 {
 	ASSERT(s_iBenchmarker_CurrentSuite >= 0);
 
+	Benchmarker_LogInfo("%.*s", s_iBenchmarker_CurrentSuite * 2, c_pBenchmarker_Indentation);
 	Benchmarker_LogInfo("Ended suite \"%s\" : ", s_pBenchmarker_Suites[s_iBenchmarker_CurrentSuite].pName);
 
 	if (s_pBenchmarker_Suites[s_iBenchmarker_CurrentSuite].iFailedChecks > 0)
