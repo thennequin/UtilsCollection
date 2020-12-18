@@ -237,6 +237,13 @@ namespace JsonStthm
 		int64_t				ToInteger() const;
 		double				ToFloat() const;
 
+#ifdef STTHM_ENABLE_IMPLICIT_CAST
+							operator const char*() const;
+							operator bool() const;
+							operator int64_t() const;
+							operator double() const;
+#endif //STTHM_ENABLE_IMPLICIT_CAST
+
 		void				SetString(const char* pValue);
 		void				SetBoolean(bool bValue);
 		void				SetInteger(int64_t iValue);
@@ -247,6 +254,9 @@ namespace JsonStthm
 
 		const JsonValue&	operator [](const char* pName) const;
 		JsonValue&			operator [](const char* pName);
+
+		const JsonValue&	operator [](char* pName) const;
+		JsonValue&			operator [](char* pName);
 
 		const JsonValue&	operator [](int iIndex) const;
 		JsonValue&			operator [](int iIndex);

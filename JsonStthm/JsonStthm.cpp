@@ -576,6 +576,28 @@ namespace JsonStthm
 		return 0.0;
 	}
 
+#ifdef STTHM_ENABLE_IMPLICIT_CAST
+	JsonValue::operator const char*() const
+	{
+		return ToString();
+	}
+
+	JsonValue::operator bool() const
+	{
+		return ToBoolean();
+	}
+
+	JsonValue::operator int64_t() const
+	{
+		return ToInteger();
+	}
+
+	JsonValue::operator double() const
+	{
+		return ToFloat();
+	}
+#endif //STTHM_ENABLE_IMPLICIT_CAST
+
 	void JsonValue::SetString(const char* pValue)
 	{
 		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
@@ -744,6 +766,16 @@ namespace JsonStthm
 			return *pNewMember;
 		}
 		return JsonValue::INVALID;
+	}
+
+	const JsonValue& JsonValue::operator[](char* pName) const
+	{
+		return (*this)[(const char*)pName];
+	}
+
+	JsonValue& JsonValue::operator[](char* pName)
+	{
+		return (*this)[(const char*)pName];
 	}
 
 	const JsonValue& JsonValue::operator [](int iIndex) const

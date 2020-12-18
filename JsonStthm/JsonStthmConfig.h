@@ -23,6 +23,8 @@
 #define JsonStthmString std::string
 #include <string>
 
+//#define STTHM_ENABLE_IMPLICIT_CAST
+
 // End of configuration
 
 #endif // __JSON_STTHM_CONFIG_H__
