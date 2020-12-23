@@ -139,11 +139,6 @@ namespace JsonStthm
 
 	JsonValue JsonValue::INVALID;
 
-	inline void JsonValue::ExplicitCtor(void* pMemory, Allocator* pAllocator)
-	{
-		new (pMemory) JsonValue(pAllocator);
-	}
-
 	Allocator JsonValue::s_oDefaultAllocator = {
 		JsonValue::DefaultAllocatorCreateJsonValue,
 		JsonValue::DefaultAllocatorDeleteJsonValue,
@@ -1622,7 +1617,8 @@ namespace JsonStthm
 		JsonValue* pValue = (JsonValue*)((JsonDoc*)pUserData)->Allocate(sizeof(JsonValue));
 		if (pValue != NULL)
 		{
-			JsonValue::ExplicitCtor(pValue, pAllocator);
+			memset(pValue, 0, sizeof(JsonValue));
+			pValue->m_pAllocator = pAllocator;
 			return pValue;
 		}
 		return NULL;

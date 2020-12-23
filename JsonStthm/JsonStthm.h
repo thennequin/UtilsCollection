@@ -186,8 +186,6 @@ namespace JsonStthm
 		};
 
 		static JsonValue	INVALID;
-
-		static void			ExplicitCtor(void* pMemory, Allocator* pAllocator);
 	protected:
 							JsonValue(Allocator* pAllocator);
 	public:
