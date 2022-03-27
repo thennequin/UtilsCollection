@@ -179,7 +179,7 @@ namespace JsonStthm
 			bool IsValid() const;
 			bool operator!=(const Iterator& oIte) const;
 			void operator++();
-			JsonValue* operator*() const;
+			JsonValue& operator*() const;
 			JsonValue* operator->() const;
 		protected:
 			JsonValue* m_pChild;
