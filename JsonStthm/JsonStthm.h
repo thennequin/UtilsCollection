@@ -247,6 +247,8 @@ namespace JsonStthm
 		void				SetInteger(int64_t iValue);
 		void				SetFloat(double fValue);
 
+		JsonValue&			Append();
+
 		bool				operator ==(const JsonValue& oRight) const;
 		bool				operator !=(const JsonValue& oRight) const;
 

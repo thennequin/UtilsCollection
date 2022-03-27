@@ -640,6 +640,31 @@ namespace JsonStthm
 		m_oValue.Float = fValue;
 	}
 
+	JsonValue& JsonValue::Append()
+	{
+		JsonStthmAssert(this != &INVALID);
+		if (this == &INVALID)
+			return INVALID;
+
+		if (m_eType == E_TYPE_NULL)
+			InitType(E_TYPE_ARRAY);
+
+		if (m_eType != E_TYPE_ARRAY)
+			return INVALID;
+
+		// Append new element
+		JsonValue* pNewChild = m_pAllocator->CreateJsonValue(m_pAllocator, m_pAllocator->pUserData);
+
+		if (NULL != m_oValue.Childs.m_pLast)
+			m_oValue.Childs.m_pLast->m_pNext = pNewChild;
+		else
+			m_oValue.Childs.m_pFirst = pNewChild;
+
+		m_oValue.Childs.m_pLast = pNewChild;
+
+		return *m_oValue.Childs.m_pLast;
+	}
+
 	bool JsonValue::operator ==(const JsonValue& oRight) const
 	{
 		if (m_eType != oRight.m_eType)
