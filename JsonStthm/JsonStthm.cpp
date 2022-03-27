@@ -1606,27 +1606,35 @@ namespace JsonStthm
 		return m_oRoot.ReadFile(pFilename);
 	}
 
-	void* JsonDoc::Allocate(size_t iSize)
+	void* JsonDoc::Allocate(JsonDoc* pDoc, size_t iSize, size_t iAlign)
 	{
-		Block* pHead = m_pLastBlock;
-		if (pHead != NULL && (iSize + pHead->m_iUsed) <= m_iBlockSize)
+		Block* pHead = pDoc->m_pLastBlock;
+		if (pHead != NULL && (iSize + iAlign + pHead->m_iUsed) <= pDoc->m_iBlockSize)
 		{
-			void* pMem = ((char*)pHead) + pHead->m_iUsed;
+			char* pMem = ((char*)pHead) + pHead->m_iUsed;
+			size_t iAlignOffset = iAlign - ((intptr_t)pMem % iAlign);
+			pMem += iAlignOffset;
 
-			pHead->m_iUsed += iSize;
+			JsonStthmAssert((intptr_t)pMem % iAlign == 0);
+
+			pHead->m_iUsed += iSize + iAlignOffset;
 			return pMem;
 		}
 
-		size_t iAllocSize = sizeof(Block) + iSize;
-		size_t iBlockSize = (iAllocSize <= m_iBlockSize) ? m_iBlockSize : iAllocSize;
+		size_t iAllocSize = sizeof(Block) + iSize + iAlign;
+		size_t iBlockSize = (iAllocSize <= pDoc->m_iBlockSize) ? pDoc->m_iBlockSize : iAllocSize;
 		Block* pBlock = (Block*)JsonStthmMalloc(iBlockSize);
 
-		pBlock->m_iUsed = iAllocSize;
+		char* pMem = (char*)(pBlock + 1);
+		size_t iAlignOffset = iAlign - ((intptr_t)pMem % iAlign);
+		pMem += iAlignOffset;
+
+		pBlock->m_iUsed = sizeof(Block) + iSize + iAlignOffset;
 
 		if (iAllocSize <= iBlockSize || pHead == NULL)
 		{
 			pBlock->m_pPrevious = pHead;
-			m_pLastBlock = pBlock;
+			pDoc->m_pLastBlock = pBlock;
 		}
 		else
 		{
@@ -1634,12 +1642,14 @@ namespace JsonStthm
 			pHead->m_pPrevious = pBlock;
 		}
 
-		return pBlock + 1;
+		JsonStthmAssert((intptr_t)pMem % iAlign == 0);
+
+		return pMem;
 	}
 
 	JsonValue* JsonDoc::CreateJsonValue(Allocator* pAllocator, void* pUserData)
 	{
-		JsonValue* pValue = (JsonValue*)((JsonDoc*)pUserData)->Allocate(sizeof(JsonValue));
+		JsonValue* pValue = (JsonValue*)Allocate((JsonDoc*)pUserData, sizeof(JsonValue), alignof(JsonValue));
 		if (pValue != NULL)
 		{
 			memset(pValue, 0, sizeof(JsonValue));
@@ -1656,7 +1666,7 @@ namespace JsonStthm
 
 	char* JsonDoc::AllocString(size_t iSize, void* pUserData)
 	{
-		return (char*)((JsonDoc*)pUserData)->Allocate(iSize);
+		return (char*)Allocate((JsonDoc*)pUserData, iSize, 1);
 	}
 
 	void JsonDoc::FreeString(char* /*pString*/, void* /*pUserData*/)

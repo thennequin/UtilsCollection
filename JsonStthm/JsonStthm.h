@@ -341,7 +341,7 @@ namespace JsonStthm
 		size_t				m_iBlockSize;
 		Block*				m_pLastBlock;
 
-		void*				Allocate(size_t iSize);
+		static void*		Allocate(JsonDoc* pDoc, size_t iSize, size_t iAlign);
 
 		static JsonValue*	CreateJsonValue(Allocator* pAllocator, void* pUserData);
 		static void			DeleteJsonValue(JsonValue* pValue, void* pUserData);
