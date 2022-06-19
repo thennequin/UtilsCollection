@@ -17,7 +17,7 @@ install:
   - build.bat vs2017
 
 build:
-  project: .projects/vs2017/UtilsCollection.sln
+  project: .project/vs2017/UtilsCollection.sln
 
 artifacts:
   - path: .output\*.exe
