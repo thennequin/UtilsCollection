@@ -1,0 +1,23 @@
+version: 0.1.{build}
+
+image:
+  - Visual Studio 2017
+
+platform:
+  - Win32
+  - x64
+
+configuration:
+  - Debug
+  - Release
+
+install:
+  - git submodule update --init --recursive
+  - cd scripts
+  - build.bat vs2017
+
+build:
+  project: .projects/vs2017/UtilsCollection.sln
+
+artifacts:
+  - path: .output\*.exe
