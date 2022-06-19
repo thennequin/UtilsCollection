@@ -225,6 +225,11 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	fprintf(pHeaderFile, "#define %s\n\n", sDefine.c_str());
 
 	fprintf(pSourceFile, "#include \"%s.h\"\n", sName.c_str());
+	
+	if (eOutputMode == E_OUTPUT_MODE_32_LE || eOutputMode == E_OUTPUT_MODE_32_BE)
+	{
+		fprintf(pSourceFile, "#include <inttypes.h>\n");
+	}
 
 	for (size_t iNamespace = 0; iNamespace < oNamespaces.size(); ++iNamespace)
 	{
