@@ -222,8 +222,11 @@ namespace JsonStthm
 
 	JsonValue::~JsonValue()
 	{
-		m_pAllocator->FreeString(m_pName, m_pAllocator->pUserData);
-		m_pName = NULL;
+		if (m_pName != NULL)
+		{
+			m_pAllocator->FreeString(m_pName, m_pAllocator->pUserData);
+			m_pName = NULL;
+		}
 		Reset();
 	}
 
