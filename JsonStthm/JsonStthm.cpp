@@ -229,11 +229,11 @@ namespace JsonStthm
 
 	void JsonValue::InitType(EType eType)
 	{
+		if (m_eType == E_TYPE_OBJECT || m_eType == E_TYPE_ARRAY || m_eType == E_TYPE_STRING)
+			Reset();
+
 		if (m_eType != eType)
 		{
-			if (m_eType == E_TYPE_OBJECT || m_eType == E_TYPE_ARRAY || m_eType == E_TYPE_STRING)
-				Reset();
-
 			m_eType = eType;
 			switch (eType)
 			{
