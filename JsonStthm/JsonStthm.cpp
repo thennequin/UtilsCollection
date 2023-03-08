@@ -458,7 +458,7 @@ namespace JsonStthm
 		else if (m_eType == E_TYPE_INTEGER)
 		{
 			char sBuffer[256];
-			snprintf(sBuffer, 256, "%lld", m_oValue.Integer);
+			snprintf(sBuffer, 256, "%jd", m_oValue.Integer);
 			size_t iLen = strlen(sBuffer);
 			sOutJson.PushRange(sBuffer, iLen);
 		}
