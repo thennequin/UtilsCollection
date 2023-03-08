@@ -665,6 +665,74 @@ namespace JsonStthm
 		return *m_oValue.Childs.m_pLast;
 	}
 
+	bool JsonValue::Combine(const JsonValue& oRight, bool bMergeSubMembers)
+	{
+		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
+		if (this == &JsonStthm::JsonValue::INVALID)
+			return false;
+
+		if (m_eType != oRight.m_eType)
+			return false;
+
+		switch(m_eType)
+		{
+		case E_TYPE_NULL:
+			// Nothing to do
+			break;
+		case E_TYPE_OBJECT:
+		{
+			// Replace value or try to add recursively values of sub objects
+			for (const JsonValue* pChild =  oRight.m_oValue.Childs.m_pFirst; pChild != NULL; pChild = pChild->m_pNext)
+			{
+				JsonValue& oLeftChild = (*this)[pChild->m_pName];
+				if (bMergeSubMembers && oLeftChild.m_eType == pChild->m_eType) // Combine again is the childrens's type is the same otherwise replace it
+				{
+					(*this)[pChild->m_pName].Combine(*pChild, true);
+				}
+				else
+				{
+					(*this)[pChild->m_pName] = *pChild;
+				}
+			}
+			break;
+		}
+		case E_TYPE_ARRAY:
+		{
+			// Append to array
+			for (const JsonValue* pChild = oRight.m_oValue.Childs.m_pFirst; pChild != NULL; pChild = pChild->m_pNext)
+			{
+				Append() = *pChild;
+			}
+			break;
+		}
+		case E_TYPE_STRING:
+		{
+			// Concatenate strings
+			size_t iLenLeft = strlen(m_oValue.String);
+			size_t iLenRight = strlen(oRight.m_oValue.String);
+			size_t iLenNew = iLenLeft + iLenRight;
+			char* pNewString = m_pAllocator->AllocString(iLenNew + 1, m_pAllocator->pUserData);
+			memcpy(pNewString, m_oValue.String, iLenLeft);
+			memcpy(pNewString + iLenLeft, oRight.m_oValue.String, iLenRight);
+			pNewString[iLenNew] = 0;
+			m_pAllocator->FreeString(m_oValue.String, m_pAllocator->pUserData);
+			m_oValue.String = pNewString;
+			break;
+		}
+		case E_TYPE_BOOLEAN:
+			m_oValue.Boolean = m_oValue.Boolean || oRight.m_oValue.Boolean;
+			break;
+		case E_TYPE_INTEGER:
+			m_oValue.Integer += oRight.m_oValue.Integer;
+			break;
+		case E_TYPE_FLOAT:
+			m_oValue.Float += oRight.m_oValue.Float;
+			break;
+		}
+
+		return true;
+	}
+
 	bool JsonValue::operator ==(const JsonValue& oRight) const
 	{
 		if (m_eType != oRight.m_eType)

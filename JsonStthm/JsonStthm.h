@@ -249,6 +249,10 @@ namespace JsonStthm
 
 		JsonValue&			Append();
 
+		// bMergeSubMembers parameter is for object type and gonna try to merge sub members when possible
+		// Other types will just add values
+		bool				Combine(const JsonValue& oRight, bool bMergeSubMembers);
+
 		bool				operator ==(const JsonValue& oRight) const;
 		bool				operator !=(const JsonValue& oRight) const;
 
