@@ -341,7 +341,7 @@ namespace JsonStthm
 			long iSize = ftell(pFile);
 			fseek(pFile, 0, SEEK_SET);
 
-			char* pString = (char*)JsonStthmMalloc(iSize);
+			char* pString = (char*)JsonStthmMalloc(iSize + 1);
 			if (pString == NULL)
 			{
 				fclose(pFile);
@@ -350,6 +350,7 @@ namespace JsonStthm
 
 			fread(pString, 1, iSize, pFile);
 			fclose(pFile);
+			pString[iSize] = 0;
 
 			int iLine = ReadString(pString);
 
