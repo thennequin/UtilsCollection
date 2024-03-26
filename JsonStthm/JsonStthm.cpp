@@ -61,26 +61,26 @@ namespace JsonStthm
 			return c_pXDigitLut[cChar];
 		}
 
-		void SkipSpaces(const char*& pString)
+		void SkipSpaces(const char*& pString, const char* pEnd)
 		{
-			while (IsSpace(*pString)) ++pString;
+			while (pString < pEnd && IsSpace(*pString)) ++pString;
 		}
 
-		int64_t StrToInt64(const char* pString, char** pEnd)
+		int64_t StrToInt64(const char* pString, const char* pEnd, char** pCursor)
 		{
 			bool bNeg = false;
-			if (*pString == '-')
+			if (pString < pEnd && *pString == '-')
 			{
 				++pString;
 				bNeg = true;
 			}
 
 			int64_t lValue = 0;
-			while (IsDigit(*pString))
+			while (pString < pEnd && IsDigit(*pString))
 				lValue = lValue * 10 + (*pString++ & 0xF);
 
-			if (pEnd != NULL)
-				*pEnd = (char*)pString;
+			if (pCursor != NULL)
+				*pCursor = (char*)pString;
 
 			return bNeg ? -lValue : lValue;
 		}
@@ -303,13 +303,17 @@ namespace JsonStthm
 		}
 	}
 
-	int JsonValue::ReadString(const char* pJson)
+	int JsonValue::ReadString(const char* pJson, const char* pJsonEnd)
 	{
 		if (pJson != NULL)
 		{
 			Reset();
+			if (pJsonEnd == NULL)
+			{
+				pJsonEnd = pJson + strlen(pJson);
+			}
 			const char* pEnd = pJson;
-			if (Parse(pEnd) == false)
+			if (Parse(pEnd, pJsonEnd) == false)
 			{
 				int iLine = 1;
 				int iReturn = 1;
@@ -352,7 +356,7 @@ namespace JsonStthm
 			fclose(pFile);
 			pString[iSize] = 0;
 
-			int iLine = ReadString(pString);
+			int iLine = ReadString(pString, pString + iSize);
 
 			JsonStthmFree(pString);
 			return iLine;
@@ -1086,20 +1090,20 @@ namespace JsonStthm
 		return *this;
 	}
 
-	bool JsonValue::Parse(const char*& pString)
+	bool JsonValue::Parse(const char*& pString, const char* pEnd)
 	{
 		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
 		if (this == &JsonStthm::JsonValue::INVALID || pString == NULL)
 			return false;
 
-		Internal::SkipSpaces(pString);
-		if (*pString == 0)
+		Internal::SkipSpaces(pString, pEnd);
+		if (pString >= pEnd || *pString == 0)
 		{
 			return true;
 		}
 		else if (*pString == '"')
 		{
-			char* pValue = ReadStringValue(++pString, m_pAllocator);
+			char* pValue = ReadStringValue(++pString, pEnd, m_pAllocator);
 			if (pValue == NULL)
 			{
 				return false;
@@ -1109,21 +1113,21 @@ namespace JsonStthm
 			m_oValue.String = pValue;
 			return true;
 		}
-		else if (memcmp(pString, "NaN", 3) == 0)
+		else if ((pEnd - pString) >= 3 && memcmp(pString, "NaN", 3) == 0)
 		{
 			pString += 3;
 			InitType(E_TYPE_FLOAT);
 			m_oValue.Float = Internal::c_fNaN;
 			return true;
 		}
-		else if (memcmp(pString, "-Infinity", 9) == 0)
+		else if ((pEnd - pString) >= 9 && memcmp(pString, "-Infinity", 9) == 0)
 		{
 			pString += 9;
 			InitType(E_TYPE_FLOAT);
 			m_oValue.Float = -Internal::c_fInfinity;
 			return true;
 		}
-		else if (memcmp(pString, "Infinity", 8) == 0)
+		else if ((pEnd - pString) >= 8 && memcmp(pString, "Infinity", 8) == 0)
 		{
 			pString += 8;
 			InitType(E_TYPE_FLOAT);
@@ -1132,23 +1136,23 @@ namespace JsonStthm
 		}
 		else if (Internal::IsDigit(*pString) || *pString == '-')
 		{
-			return ReadNumericValue(pString, *this);
+			return ReadNumericValue(pString, pEnd, *this);
 		}
-		else if (memcmp(pString, "true", 4) == 0)
+		else if ((pEnd - pString) >= 4 && memcmp(pString, "true", 4) == 0)
 		{
 			pString += 4;
 			InitType(E_TYPE_BOOLEAN);
 			m_oValue.Boolean = true;
 			return true;
 		}
-		else if (memcmp(pString, "false", 5) == 0)
+		else if ((pEnd - pString) >= 5 && memcmp(pString, "false", 5) == 0)
 		{
 			pString += 5;
 			InitType(E_TYPE_BOOLEAN);
 			m_oValue.Boolean = false;
 			return true;
 		}
-		else if (memcmp(pString, "null", 4) == 0)
+		else if ((pEnd - pString) >= 4 && memcmp(pString, "null", 4) == 0)
 		{
 			pString += 4;
 			InitType(E_TYPE_NULL);
@@ -1157,12 +1161,12 @@ namespace JsonStthm
 		else if (*pString == '{')
 		{
 			++pString;
-			return ReadObjectValue(pString, *this);
+			return ReadObjectValue(pString, pEnd, *this);
 		}
 		else if (*pString == '[')
 		{
 			++pString;
-			return ReadArrayValue(pString, *this);
+			return ReadArrayValue(pString, pEnd, *this);
 		}
 
 		// Error
@@ -1171,8 +1175,11 @@ namespace JsonStthm
 
 	// Static functions
 
-	int JsonValue::ReadSpecialChar(const char*& pString, char* pOut)
+	int JsonValue::ReadSpecialChar(const char*& pString, const char* pEnd, char* pOut)
 	{
+		if( pString >= pEnd )
+			return 0;
+
 		if (*pString == 'n')		{ pOut[0] = '\n';	return 1; }
 		else if (*pString == 'r')	{ pOut[0] = '\r';	return 1; }
 		else if (*pString == 't')	{ pOut[0] = '\t';	return 1; }
@@ -1186,6 +1193,9 @@ namespace JsonStthm
 			uint32_t iChar = 0;
 			for (int i = 0; i < 4; ++i)
 			{
+				if (pString >= pEnd)
+					return 0;
+
 				uint8_t iXDigit = Internal::XDigitToUInt8(*++pString);
 				if (iXDigit != 255)
 					iChar = iChar * 16 + iXDigit;
@@ -1198,12 +1208,15 @@ namespace JsonStthm
 				if ((iChar & 0xFC00) != 0xD800)
 					return 0; //Invalid first pair code
 
-				if (*++pString != '\\' || *++pString != 'u')
+				if (pString >= pEnd || *++pString != '\\' || *++pString != 'u')
 					return 0; //Not a valid pair
 
 				uint32_t iChar2 = 0;
 				for (int i = 0; i < 4; ++i)
 				{
+					if (pString >= pEnd)
+						return 0;
+
 					uint8_t iXDigit = Internal::XDigitToUInt8(*++pString);
 					if (iXDigit != 255)
 						iChar2 = iChar2 * 16 + iXDigit;
@@ -1248,18 +1261,18 @@ namespace JsonStthm
 		return 0;
 	}
 
-	char* JsonValue::ReadStringValue(const char*& pString, Allocator* pAllocator)
+	char* JsonValue::ReadStringValue(const char*& pString, const char* pEnd, Allocator* pAllocator)
 	{
 		size_t iLen = 0;
 		// Read string length
 		{
 			char pTemp[4];
 			const char* pCursor = pString;
-			while (*pCursor != 0)
+			while (pCursor < pEnd && *pCursor != 0)
 			{
 				if (*pCursor == '\\')
 				{
-					int iCharLen = ReadSpecialChar(++pCursor, pTemp);
+					int iCharLen = ReadSpecialChar(++pCursor, pEnd, pTemp);
 					if (iCharLen == 0)
 						return NULL;
 					iLen += iCharLen;
@@ -1284,11 +1297,11 @@ namespace JsonStthm
 
 		// Read string
 		{
-			while (*pString != 0)
+			while (pString < pEnd && *pString != 0)
 			{
 				if (*pString == '\\')
 				{
-					int iCharLen = ReadSpecialChar(++pString, pNewStringCursor);
+					int iCharLen = ReadSpecialChar(++pString, pEnd, pNewStringCursor);
 					if (iCharLen == 0)
 						return NULL;
 					pNewStringCursor += iCharLen;
@@ -1309,7 +1322,7 @@ namespace JsonStthm
 		return NULL;
 	}
 
-	bool JsonValue::ReadNumericValue(const char*& pString, JsonValue& oValue)
+	bool JsonValue::ReadNumericValue(const char*& pString, const char* pEnd, JsonValue& oValue)
 	{
 	#ifdef STTHM_USE_CUSTOM_NUMERIC_PARSER
 		static double const c_pExpTable[] = {
@@ -1330,35 +1343,35 @@ namespace JsonStthm
 		uint64_t lValue = 0;
 		int iNegFract = 0;
 
-		while (Internal::IsDigit(*pString))
+		while (pString < pEnd && Internal::IsDigit(*pString))
 			lValue = lValue * 10 + (*pString++ & 0xF);
 
 		if (*pString == '.')
 		{
 			const char* pStart = ++pString;
 
-			while (Internal::IsDigit(*pString))
+			while (pString < pEnd && Internal::IsDigit(*pString))
 				lValue = lValue * 10 + (*pString++ & 0xF);
 
 			iNegFract = (int)(pString - pStart);
 
-			if (*pString == 'e' || *pString == 'E')
+			if (pString < pEnd && (*pString == 'e' || *pString == 'E'))
 			{
 				++pString;
 
 				bool bNegExp = false;
-				if (*pString == '+')
+				if (pString < pEnd && *pString == '+')
 				{
 					++pString;
 				}
-				else if (*pString == '-')
+				else if (pString < pEnd && *pString == '-')
 				{
 					++pString;
 					bNegExp = true;
 				}
 
 				uint64_t iExpValue = 0;
-				while (Internal::IsDigit(*pString))
+				while (pString < pEnd && Internal::IsDigit(*pString))
 					iExpValue = iExpValue * 10 + (*pString++ & 0xF);
 
 				iNegFract += bNegExp ? (int)iExpValue : -(int)iExpValue;
@@ -1368,15 +1381,15 @@ namespace JsonStthm
 		else
 		{
 			//TODO manage E/e for long?
-			oValue = (int64_t)(bNeg ? -lValue : lValue);
+			oValue = (int64_t)(bNeg ? -(int64_t)lValue : lValue);
 		}
 		return true;
 	#else //STTHM_USE_CUSTOM_NUMERIC_PARSER
 		char* pEndDouble;
 		char* pEndLong;
-		double fValue = strtod( pString, &pEndDouble );
-		int64_t iValue = Internal::StrToInt64( pString, &pEndLong );
-		if( pEndDouble > pEndLong )
+		double fValue = strtod(pString, &pEndDouble); // TODO : Unsafe
+		int64_t iValue = Internal::StrToInt64(pString, pEnd, &pEndLong);
+		if (pEndDouble > pEndLong)
 		{
 			pString = pEndDouble;
 			oValue.InitType(E_TYPE_FLOAT);
@@ -1393,43 +1406,43 @@ namespace JsonStthm
 	#endif // !STTHM_USE_CUSTOM_NUMERIC_PARSER
 	}
 
-	bool JsonValue::ReadObjectValue(const char*& pString, JsonValue& oValue)
+	bool JsonValue::ReadObjectValue(const char*& pString, const char* pEnd, JsonValue& oValue)
 	{
 		oValue.InitType(JsonValue::E_TYPE_OBJECT);
 
-		Internal::SkipSpaces(pString);
+		Internal::SkipSpaces(pString, pEnd);
 
-		if( *pString == '}' )
+		if (pString < pEnd && *pString == '}')
 		{
 			++pString;
 			return true;
 		}
 
-		while (*pString != 0)
+		while (pString < pEnd && *pString != 0)
 		{
-			Internal::SkipSpaces(pString);
+			Internal::SkipSpaces(pString, pEnd);
 
 			// Read member name
-			if (*pString != '"')
+			if (pString >= pEnd || *pString != '"')
 				return false;
 
-			char* pName = ReadStringValue(++pString, oValue.m_pAllocator);
+			char* pName = ReadStringValue(++pString, pEnd, oValue.m_pAllocator);
 			if (pName == NULL)
 				return false;
 
 			JsonValue* pNewMember = oValue.m_pAllocator->CreateJsonValue(oValue.m_pAllocator, oValue.m_pAllocator->pUserData);
 			pNewMember->m_pName = pName;
 
-			Internal::SkipSpaces(pString);
+			Internal::SkipSpaces(pString, pEnd);
 
-			if (*pString != ':')
+			if (pString >= pEnd || *pString != ':')
 				return false;
 
 			++pString;
 
-			Internal::SkipSpaces(pString);
+			Internal::SkipSpaces(pString, pEnd);
 
-			if (pNewMember->Parse(pString) == false)
+			if (pNewMember->Parse(pString, pEnd) == false)
 			{
 				oValue.m_pAllocator->DeleteJsonValue(pNewMember, oValue.m_pAllocator->pUserData);
 				return false;
@@ -1445,7 +1458,7 @@ namespace JsonStthm
 			}
 			oValue.m_oValue.Childs.m_pLast = pNewMember;
 
-			Internal::SkipSpaces(pString);
+			Internal::SkipSpaces(pString, pEnd);
 
 			if (*pString == '}')
 			{
@@ -1461,24 +1474,24 @@ namespace JsonStthm
 		return false;
 	}
 
-	bool JsonValue::ReadArrayValue(const char*& pString, JsonValue& oValue)
+	bool JsonValue::ReadArrayValue(const char*& pString, const char* pEnd, JsonValue& oValue)
 	{
 		oValue.InitType(JsonValue::E_TYPE_ARRAY);
 
-		Internal::SkipSpaces( pString );
-		if( *pString == ']' )
+		Internal::SkipSpaces(pString, pEnd);
+		if (*pString == ']')
 		{
 			++pString;
 			return true;
 		}
 
-		while (*pString != 0)
+		while (pString < pEnd && *pString != 0)
 		{
-			Internal::SkipSpaces(pString);
+			Internal::SkipSpaces(pString, pEnd);
 
 			JsonValue* pNewValue = oValue.m_pAllocator->CreateJsonValue(oValue.m_pAllocator, oValue.m_pAllocator->pUserData);
 
-			if (pNewValue->Parse(pString) == false)
+			if (pNewValue->Parse(pString, pEnd) == false)
 			{
 				oValue.m_pAllocator->DeleteJsonValue(pNewValue, oValue.m_pAllocator->pUserData);
 
@@ -1495,7 +1508,7 @@ namespace JsonStthm
 			}
 			oValue.m_oValue.Childs.m_pLast = pNewValue;
 
-			Internal::SkipSpaces(pString);
+			Internal::SkipSpaces(pString, pEnd);
 
 			if (*pString == ']')
 			{
@@ -1666,10 +1679,10 @@ namespace JsonStthm
 		m_pLastBlock = NULL;
 	}
 
-	int JsonDoc::ReadString(const char* pJson)
+	int JsonDoc::ReadString(const char* pJson, const char* pEnd)
 	{
 		Clear();
-		return m_oRoot.ReadString(pJson);
+		return m_oRoot.ReadString(pJson, pEnd);
 	}
 
 	int JsonDoc::ReadFile(const char* pFilename)

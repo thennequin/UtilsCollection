@@ -204,7 +204,7 @@ namespace JsonStthm
 		void				Reset();
 		EType				GetType() const;
 
-		int					ReadString(const char* pJson);
+		int					ReadString(const char* pJson, const char* pJsonEnd = NULL);
 		int					ReadFile(const char* pFilename);
 
 		void				Write(Internal::CharBuffer& sOutJson, size_t iIndent, bool bCompact) const;
@@ -301,13 +301,13 @@ namespace JsonStthm
 
 		ValueUnion			m_oValue;
 
-		bool				Parse(const char*& pString);
+		bool				Parse(const char*& pString, const char* pEnd);
 
-		static inline int	ReadSpecialChar(const char*& pString, char* pOut);
-		static inline char*	ReadStringValue(const char*& pString, Allocator* pAllocator);
-		static inline bool	ReadNumericValue(const char*& pString, JsonValue& oValue);
-		static inline bool	ReadObjectValue(const char*& pString, JsonValue& oValue);
-		static inline bool	ReadArrayValue(const char*& pString, JsonValue& oValue);
+		static inline int	ReadSpecialChar(const char*& pString, const char* pEnd, char* pOut);
+		static inline char*	ReadStringValue(const char*& pString, const char* pEnd, Allocator* pAllocator);
+		static inline bool	ReadNumericValue(const char*& pString, const char* pEnd, JsonValue& oValue);
+		static inline bool	ReadObjectValue(const char*& pString, const char* pEnd, JsonValue& oValue);
+		static inline bool	ReadArrayValue(const char*& pString, const char* pEnd, JsonValue& oValue);
 		static void			WriteStringEscaped(Internal::CharBuffer& sOutJson, const char* pBuffer);
 
 		static JsonValue*	DefaultAllocatorCreateJsonValue(Allocator* pAllocator, void* pUserData);
@@ -328,7 +328,7 @@ namespace JsonStthm
 
 		void				Clear();
 
-		int					ReadString(const char* pJson);
+		int					ReadString(const char* pJson, const char* pJsonEnd = NULL);
 		int					ReadFile(const char* pFilename);
 
 		size_t				MemoryUsage() const;
