@@ -123,12 +123,12 @@ namespace JsonStthm
 			m_pChild = m_pChild->m_pNext;
 	}
 
-	JsonValue& JsonValue::Iterator::operator*() const
+	const JsonValue& JsonValue::Iterator::operator*() const
 	{
 		return m_pChild != NULL ? *m_pChild : INVALID;
 	}
 
-	JsonValue* JsonValue::Iterator::operator->() const
+	const JsonValue* JsonValue::Iterator::operator->() const
 	{
 		return m_pChild;
 	}
