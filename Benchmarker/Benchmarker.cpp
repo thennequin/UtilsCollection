@@ -160,6 +160,12 @@ void Benchmarker_Suite_End()
 	Benchmarker_LogInfo("%.*s", s_iBenchmarker_CurrentSuite * 2, c_pBenchmarker_Indentation);
 	Benchmarker_LogInfo("Ended suite \"%s\" : ", s_pBenchmarker_Suites[s_iBenchmarker_CurrentSuite].pName);
 
+	if (s_iBenchmarker_CurrentSuite > 0)
+	{
+		s_pBenchmarker_Suites[s_iBenchmarker_CurrentSuite - 1].iTotalChecks += s_pBenchmarker_Suites[s_iBenchmarker_CurrentSuite].iTotalChecks;
+		s_pBenchmarker_Suites[s_iBenchmarker_CurrentSuite - 1].iFailedChecks += s_pBenchmarker_Suites[s_iBenchmarker_CurrentSuite].iFailedChecks;
+	}
+
 	if (s_pBenchmarker_Suites[s_iBenchmarker_CurrentSuite].iFailedChecks > 0)
 	{
 		Benchmarker_LogError("%llu tests failed on %llu tests\n",
