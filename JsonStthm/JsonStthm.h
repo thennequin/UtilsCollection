@@ -217,6 +217,7 @@ namespace JsonStthm
 		int					GetMemberCount() const;
 
 		const char*			GetName() const { return m_pName; }
+		const JsonValue*	GetNext() const { return m_pNext; }
 
 		bool				IsValid() const		{ return this != &JsonValue::INVALID; }
 		bool				IsNull() const		{ return m_eType == E_TYPE_NULL; }
