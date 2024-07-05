@@ -225,7 +225,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	fprintf(pHeaderFile, "#define %s\n\n", sDefine.c_str());
 
 	fprintf(pSourceFile, "#include \"%s.h\"\n", sName.c_str());
-	
+
 	if (eOutputMode == E_OUTPUT_MODE_32_LE || eOutputMode == E_OUTPUT_MODE_32_BE)
 	{
 		fprintf(pSourceFile, "#include <inttypes.h>\n");
@@ -264,7 +264,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		}
 		fprintf(pHeaderFile, "%s extern const unsigned long long Size;\n", sIndentP.c_str());
 		fprintf(pHeaderFile, "%s extern const unsigned long long CompressedSize;\n", sIndentP.c_str());
-		fprintf(pHeaderFile, "%s extern const char* CompressedData;\n", sIndentP.c_str());
+		fprintf(pHeaderFile, "%s extern const unsigned char* CompressedData;\n", sIndentP.c_str());
 
 		if (eOutputMode != E_OUTPUT_MODE_8)
 		{
@@ -274,7 +274,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		fprintf(pSourceFile, "%sconst unsigned long long CompressedSize = %zu;\n", sIndentP.c_str(), iCompressedSize);
 		if (eOutputMode == E_OUTPUT_MODE_8)
 		{
-			fprintf(pSourceFile, "%sconst char CompressedDataArray[] = {", sIndentP.c_str());
+			fprintf(pSourceFile, "%sconst unsigned char CompressedDataArray[] = {", sIndentP.c_str());
 		}
 		else
 		{
@@ -288,7 +288,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 			fprintf(pHeaderFile, "%s extern const bool BigEndian;\n", sIndentP.c_str());
 		}
 		fprintf(pHeaderFile, "%s extern const unsigned long long Size;\n", sIndentP.c_str());
-		fprintf(pHeaderFile, "%s extern const char* Data;\n", sIndentP.c_str());
+		fprintf(pHeaderFile, "%s extern const unsigned char* Data;\n", sIndentP.c_str());
 
 		if (eOutputMode != E_OUTPUT_MODE_8)
 		{
@@ -297,7 +297,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		fprintf(pSourceFile, "%sconst unsigned long long Size = %zu;\n", sIndentP.c_str(), iOriginSize);
 		if (eOutputMode == E_OUTPUT_MODE_8)
 		{
-			fprintf(pSourceFile, "%sconst char DataArray[] = {", sIndentP.c_str());
+			fprintf(pSourceFile, "%sconst unsigned char DataArray[] = {", sIndentP.c_str());
 		}
 		else
 		{
@@ -341,11 +341,11 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 
 	if (eCompressMode != E_COMPRESS_MODE_NONE)
 	{
-		fprintf(pSourceFile, "%sconst char* CompressedData = (const char*)CompressedDataArray;\n", sIndentP.c_str());
+		fprintf(pSourceFile, "%sconst unsigned char* CompressedData = (const unsigned char*)CompressedDataArray;\n", sIndentP.c_str());
 	}
 	else
 	{
-		fprintf(pSourceFile, "%sconst char* Data = (const char*)DataArray;\n", sIndentP.c_str());
+		fprintf(pSourceFile, "%sconst unsigned char* Data = (const unsigned char*)DataArray;\n", sIndentP.c_str());
 	}
 
 	//Closing namespaces
@@ -516,7 +516,7 @@ void main(int argn, char** argv)
 		printf("                      - lz4hc : LZ4 High Compression (level 5)\n");
 		printf("                      - zstd  : Facebook Zstd (level 11)\n");
 		printf("  --m=<mode>       : storage output mode\n");
-		printf("                      - 8     : 8 bits char (default)\n");
+		printf("                      - 8     : 8 bits unsigned char (default)\n");
 		printf("                      - 32    : 32 bits unsigned int32 auto detect Endianness\n");
 		printf("                      - 32le  : 32 bits unsigned int32 Little Endian\n");
 		printf("                      - 32be  : 32 bits unsigned int32 Big Endian\n");
