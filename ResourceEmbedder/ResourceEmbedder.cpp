@@ -105,7 +105,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 	fseek(pOriginFile, 0, SEEK_END);
 	iOriginSize = (unsigned int)ftell(pOriginFile);
 	fseek(pOriginFile, 0, SEEK_SET);
-	char* pData = (char*)malloc(iOriginSize);
+	unsigned char* pData = (unsigned char*)malloc(iOriginSize);
 	fread(pData, 1, iOriginSize, pOriginFile);
 
 	fclose(pOriginFile);
@@ -122,7 +122,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		if (iCompressBound > 0)
 		{
 			char* pCompressed = (char*)malloc(iCompressBound);
-			iCompressedSize = (uint64_t)LZ4_compress_default(pData, pCompressed, (int)iOriginSize, iCompressBound);
+			iCompressedSize = (uint64_t)LZ4_compress_default((const char*)pData, pCompressed, (int)iOriginSize, iCompressBound);
 
 			if (iCompressedSize >= iOriginSize)
 			{
@@ -133,7 +133,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 			else
 			{
 				free(pData);
-				pData = pCompressed;
+				pData = (unsigned char*)pCompressed;
 			}
 		}
 	}
@@ -143,7 +143,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		if (iCompressBound > 0)
 		{
 			char* pCompressed = (char*)malloc(iCompressBound);
-			iCompressedSize = (uint64_t)LZ4_compress_HC(pData, pCompressed, (int)iOriginSize, iCompressBound, 5);
+			iCompressedSize = (uint64_t)LZ4_compress_HC((const char*)pData, pCompressed, (int)iOriginSize, iCompressBound, 5);
 
 			if (iCompressedSize >= iOriginSize)
 			{
@@ -154,7 +154,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 			else
 			{
 				free(pData);
-				pData = pCompressed;
+				pData = (unsigned char*)pCompressed;
 			}
 		}
 	}
@@ -175,7 +175,7 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 			else
 			{
 				free(pData);
-				pData = pCompressed;
+				pData = (unsigned char*)pCompressed;
 			}
 		}
 	}
@@ -320,13 +320,13 @@ void ExportFile(const char* pName, const char* pInputFilename, const char* pOutp
 		uint32_t iValue = 0;
 		for (int iOffset = 0; iOffset < iStep && (iPos + iOffset) < iSize; ++iOffset)
 		{
-			if (eOutputMode == E_OUTPUT_MODE_32_BE)
+			if (eOutputMode == E_OUTPUT_MODE_32_LE)
 			{
-				((unsigned char*)&iValue)[iOffset] = *(pData + iPos + iOffset);
+				((unsigned char*)&iValue)[iOffset] = *(pData + iPos + (3 - iOffset));
 			}
 			else
 			{
-				((unsigned char*)&iValue)[iOffset] = *(pData + iPos + (3 - iOffset));
+				((unsigned char*)&iValue)[iOffset] = *(pData + iPos + iOffset);
 			}
 		}
 
