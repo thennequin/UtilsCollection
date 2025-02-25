@@ -998,6 +998,10 @@ namespace JsonStthm
 		{
 			*this = oValue.ToFloat();
 		}
+		else
+		{
+			InitType(E_TYPE_NULL);
+		}
 		return *this;
 	}
 
