@@ -10,7 +10,7 @@
 
 #ifndef NULL
 #define NULL 0
-#endif 
+#endif
 
 #include <assert.h>
 #define JsonStthmAssert(bCondition) assert((bCondition))
@@ -24,6 +24,12 @@
 #include <string>
 
 //#define STTHM_ENABLE_IMPLICIT_CAST
+
+/*
+* Allow to define custom functions to JsonValue
+* Usefull to declare implicit cast operator
+*/
+//#define STTHM_CUSTOM_FUNCTIONS
 
 // End of configuration
 

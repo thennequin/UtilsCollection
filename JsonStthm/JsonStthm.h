@@ -295,6 +295,10 @@ namespace JsonStthm
 		{
 			return Iterator(NULL);
 		}
+
+#ifdef STTHM_CUSTOM_FUNCTIONS
+		STTHM_CUSTOM_FUNCTIONS
+#endif // STTHM_CUSTOM_FUNCTIONS
 	protected:
 		void				SetStringValue(const char* pString);
 
