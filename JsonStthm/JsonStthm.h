@@ -244,7 +244,7 @@ namespace JsonStthm
 							operator double() const;
 #endif //STTHM_ENABLE_IMPLICIT_CAST
 
-		void				SetString(const char* pValue);
+		void				SetString(const char* pValue, const char* pEnd = NULL);
 		void				SetBoolean(bool bValue);
 		void				SetInteger(int64_t iValue);
 		void				SetFloat(double fValue);
@@ -300,7 +300,7 @@ namespace JsonStthm
 		STTHM_CUSTOM_FUNCTIONS
 #endif // STTHM_CUSTOM_FUNCTIONS
 	protected:
-		void				SetStringValue(const char* pString);
+		void				SetStringValue(const char* pString, const char* pEnd = NULL);
 
 		Allocator*			m_pAllocator;
 

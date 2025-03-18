@@ -133,7 +133,7 @@ namespace JsonStthm
 		return m_pChild;
 	}
 
-	JsonValue::Iterator::operator const JsonValue& () const
+	JsonValue::Iterator::operator const JsonValue&() const
 	{
 		return m_pChild != NULL ? *m_pChild : INVALID;
 	}
@@ -294,16 +294,18 @@ namespace JsonStthm
 		return m_eType;
 	}
 
-	void JsonValue::SetStringValue(const char* pString)
+	void JsonValue::SetStringValue(const char* pString, const char* pEnd)
 	{
 		JsonStthmAssert(IsString());
 		m_pAllocator->FreeString(m_oValue.String, m_pAllocator->pUserData);
 		m_oValue.String = NULL;
 		if (NULL != pString)
 		{
-			size_t iLen  = 1 + strlen(pString);
-			char* pNewString = m_pAllocator->AllocString(iLen, m_pAllocator->pUserData);
+			JsonStthmAssert(pEnd == NULL || pEnd >= pString);
+			size_t iLen = (pEnd != NULL) ? (pEnd - pString) : strlen(pString);
+			char* pNewString = m_pAllocator->AllocString(iLen + 1, m_pAllocator->pUserData);
 			memcpy(pNewString, pString, iLen);
+			pNewString[iLen] = 0;
 			m_oValue.String = pNewString;
 		}
 	}
@@ -606,7 +608,7 @@ namespace JsonStthm
 	}
 #endif //STTHM_ENABLE_IMPLICIT_CAST
 
-	void JsonValue::SetString(const char* pValue)
+	void JsonValue::SetString(const char* pValue, const char* pEnd)
 	{
 		JsonStthmAssert(this != &JsonStthm::JsonValue::INVALID);
 		if (this == &JsonStthm::JsonValue::INVALID)
@@ -615,7 +617,7 @@ namespace JsonStthm
 		if (NULL != pValue)
 		{
 			InitType(E_TYPE_STRING);
-			SetStringValue(pValue);
+			SetStringValue(pValue, pEnd);
 		}
 		else
 		{
