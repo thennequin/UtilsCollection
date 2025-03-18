@@ -133,6 +133,11 @@ namespace JsonStthm
 		return m_pChild;
 	}
 
+	JsonValue::Iterator::operator const JsonValue& () const
+	{
+		return m_pChild != NULL ? *m_pChild : INVALID;
+	}
+
 	//////////////////////////////
 	// JsonValue
 	//////////////////////////////

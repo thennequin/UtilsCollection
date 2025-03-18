@@ -181,6 +181,7 @@ namespace JsonStthm
 			void operator++();
 			const JsonValue& operator*() const;
 			const JsonValue* operator->() const;
+			operator const JsonValue& () const;
 		protected:
 			const JsonValue* m_pChild;
 		};
@@ -276,6 +277,24 @@ namespace JsonStthm
 		JsonValue&			operator =(double fValue);
 
 		JsonValue&			operator +=(const JsonValue& oValue);
+
+		const Iterator		begin() const
+		{
+			return Iterator(this);
+		}
+		const Iterator		end() const
+		{
+			return Iterator(NULL);
+		}
+
+		Iterator			begin()
+		{
+			return Iterator(this);
+		}
+		Iterator			end()
+		{
+			return Iterator(NULL);
+		}
 	protected:
 		void				SetStringValue(const char* pString);
 
