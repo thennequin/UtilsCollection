@@ -2,7 +2,7 @@
 // Single library for fast BC6H compression on CPU
 // Adapted from GPU Realtime BC6H (https://github.com/knarkowicz/GPURealTimeBC6H/)
 
-// Use '#define __FASTBC6HENCODER_IMPLEMENTATION__' before including to create the implementation
+// Use '#define FASTBC6HENCODER_IMPLEMENTATION' before including to create the implementation
 
 // Perfomances
 // Encode a 4096 * 2048 texture under 5 seconds on a AMD 3900x (monothread)
@@ -22,7 +22,7 @@ void EncodeBC6H_Quality(void* block, float& blockMSLE, const float* texels);
 ////////////// End of header ///////////////
 ////////////////////////////////////////////
 
-#ifdef __FASTBC6HENCODER_IMPLEMENTATION__
+#ifdef FASTBC6HENCODER_IMPLEMENTATION
 ////////////////////////////////////////////
 
 // Improve quality at small performance loss
@@ -1066,4 +1066,4 @@ void EncodeBC6H_Quality(void* block, float& blockMSLE, const float* texels)
 	EncodeBC6H_Quality((uint32_t*)block, blockMSLE, (const float3*)texels);
 }
 
-#endif //__FASTBC6HENCODER_IMPLEMENTATION__
+#endif //FASTBC6HENCODER_IMPLEMENTATION
