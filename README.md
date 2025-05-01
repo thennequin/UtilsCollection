@@ -8,5 +8,6 @@ Collection of utils code
 
 ### Libraries
   - **[BooleanExpression](BooleanExpression)** : Simple Lexer does to make a search engine
+  - **[FastBC6HEncoder](FastBC6HEncoder)** : Fast BC6H texture block compression based on [GPURealTimeBC6H](https://github.com/knarkowicz/GPURealTimeBC6H)
   - **[JsonStthm](JsonStthm)** : Simple Json parser/serializer
   - **[StringBuilder](StringUtils)** : Create large string easily and optimally
