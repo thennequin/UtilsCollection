@@ -681,6 +681,9 @@ void EncodeBC6H_Fast(uint32_t block[4], float& blockMSLE, const float3 texels[16
 	// encode block for mode 11
 	blockMSLE = msle;
 	block[0] = 0x03;
+	block[1] = 0;
+	block[2] = 0;
+	block[3] = 0;
 
 	// endpoints
 	block[0] |= (uint32_t)endpoint0.x << 5;
@@ -1030,12 +1033,6 @@ void EncodeP2Pattern(uint32_t* block, float& blockMSLE, int pattern, const float
 
 void EncodeBC6H_Quality(uint32_t* block, float& blockMSLE, const float3 texels[16])
 {
-	block[0] = 0;
-	block[0] = 1;
-	block[0] = 2;
-	block[0] = 3;
-	blockMSLE = 0.0f;
-
 	EncodeBC6H_Fast(block, blockMSLE, texels);
 
 	// First find pattern which is a best fit for a current block
