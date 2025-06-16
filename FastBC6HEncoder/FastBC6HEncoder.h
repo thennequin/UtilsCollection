@@ -66,7 +66,7 @@ struct float3
 		z = v.z;
 	}
 
-	bool operator == (const float3 b) const
+	bool operator == (const float3& b) const
 	{
 		return x == b.x
 			&& y == b.y
@@ -158,7 +158,7 @@ float3 operator /(float left, const float3& right)
 	return float3(left / right.x, left / right.y, left / right.z);
 }
 
-float dot(const float3 a, const float3 b)
+float dot(const float3& a, const float3& b)
 {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
@@ -319,7 +319,7 @@ float max(float a, float b)
 }
 
 
-float3 min(const float3& a, const float3 b)
+float3 min(const float3& a, const float3& b)
 {
 	return {
 		min(a.x, b.x),
@@ -328,7 +328,7 @@ float3 min(const float3& a, const float3 b)
 	};
 }
 
-float3 max(const float3& a, const float3 b)
+float3 max(const float3& a, const float3& b)
 {
 	return {
 		max(a.x, b.x),
