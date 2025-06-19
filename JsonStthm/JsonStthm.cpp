@@ -375,8 +375,6 @@ namespace JsonStthm
 	{
 		if (m_eType == E_TYPE_OBJECT)
 		{
-			Internal::CharBuffer sIndent(iIndent, '\t');
-			Internal::CharBuffer sIndent2(iIndent + 1, '\t');
 			sOutJson += '{';
 			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			bool bFirst = true;
@@ -394,7 +392,7 @@ namespace JsonStthm
 				if (bCompact == false)
 				{
 					sOutJson += '\n';
-					sOutJson.PushRange(sIndent2.Data(), sIndent2.Size());
+					sOutJson.PushRepeat('\t', iIndent + 1);
 				}
 
 				sOutJson += '\"';
@@ -411,15 +409,13 @@ namespace JsonStthm
 			if (bCompact == false)
 			{
 				sOutJson += '\n';
-				sOutJson.PushRange(sIndent.Data(), sIndent.Size());
+				sOutJson.PushRepeat('\t', iIndent);
 			}
 
 			sOutJson += '}';
 		}
 		else if (m_eType == E_TYPE_ARRAY)
 		{
-			Internal::CharBuffer sIndent(iIndent, '\t');
-			Internal::CharBuffer sIndent2(iIndent + 1, '\t');
 			sOutJson += '[';
 			JsonValue* pChild = m_oValue.Childs.m_pFirst;
 			bool bFirst = true;
@@ -437,7 +433,7 @@ namespace JsonStthm
 				if (bCompact == false)
 				{
 					sOutJson += '\n';
-					sOutJson.PushRange(sIndent2.Data(), sIndent2.Size());
+					sOutJson.PushRepeat('\t', iIndent + 1);
 				}
 
 				pChild->Write(sOutJson, iIndent + 1, bCompact);
@@ -446,7 +442,7 @@ namespace JsonStthm
 			if (bCompact == false)
 			{
 				sOutJson += '\n';
-				sOutJson.PushRange(sIndent.Data(), sIndent.Size());
+				sOutJson.PushRepeat('\t', iIndent);
 			}
 			sOutJson += ']';
 		}

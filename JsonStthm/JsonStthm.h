@@ -69,7 +69,16 @@ namespace JsonStthm
 			void PushRange(const T* pBegin, size_t iLength)
 			{
 				Resize(m_iSize + iLength);
-				memcpy(&m_pData[m_iSize - iLength], pBegin, iLength);
+				memcpy(&m_pData[m_iSize - iLength], pBegin, iLength * sizeof(T));
+			}
+
+			void PushRepeat(const T& oValue, size_t iCount)
+			{
+				Resize(m_iSize + iCount);
+				for (size_t i = 0; i < iCount; ++i)
+				{
+					m_pData[m_iSize - iCount + i] = oValue;
+				}
 			}
 
 			size_t Size() const
